@@ -1,0 +1,14 @@
+{
+  "name": "linderman-cc-utils",
+  "owner": {
+    "name": "Linderman",
+    "email": "your.email@example.com"
+  },
+  "plugins": [
+    {
+      "name": "pje-extensions",
+      "source": "./plugins/pje-extensions",
+      "description": "Ferramentas para desenvolvimento de extensões Chrome para o PJe (TRF5)"
+    }
+  ]
+}

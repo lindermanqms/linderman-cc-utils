@@ -1,0 +1,10 @@
+{
+  "name": "pje-extensions",
+  "description": "Ferramentas e skills para desenvolvimento de extensões Chrome para o PJe (TRF5), incluindo engenharia reversa e guias de desenvolvimento.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Linderman",
+    "email": "your.email@example.com"
+  },
+  "skills": "./skills/"
+}
