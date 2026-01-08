@@ -1,0 +1,11 @@
+{
+  "name": "spec-workflow",
+  "version": "0.2.0",
+  "description": "Workflow Spec-Driven Development com integração Backlog.md e Memory MCP (Grafo de Conhecimento)",
+  "author": {
+    "name": "Claude Code User",
+    "email": "user@example.com"
+  },
+  "skills": "./skills/",
+  "commands": "./commands/"
+}

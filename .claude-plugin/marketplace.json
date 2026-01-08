@@ -9,6 +9,16 @@
       "name": "pje-extensions",
       "source": "./plugins/pje-extensions",
       "description": "Ferramentas para desenvolvimento de extensões Chrome para o PJe (TRF5)"
+    },
+    {
+      "name": "reverse-engineering-utils",
+      "source": "./plugins/reverse-engineering-utils",
+      "description": "General purpose tools for web reverse engineering and HAR analysis"
+    },
+    {
+      "name": "spec-workflow",
+      "source": "./plugins/spec-workflow",
+      "description": "Workflow Spec-Driven Development com integração Backlog.md e Cipher Memory"
     }
   ]
 }
