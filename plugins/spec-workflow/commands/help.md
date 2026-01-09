@@ -1,6 +1,13 @@
 ---
 name: spec-help
 description: Exibe ajuda sobre o fluxo de trabalho Spec-Driven Development e lista os comandos disponíveis.
+version: 0.1.0
+category: workflow
+triggers:
+  - "/spec-help"
+  - "ajuda spec"
+  - "comandos spec"
+  - "como usar spec"
 ---
 
 # Spec-Driven Development Help

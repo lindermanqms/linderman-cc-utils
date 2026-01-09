@@ -2,6 +2,12 @@
 name: spec-init
 description: Initialize Spec-Driven Development environment with Backlog and Memory MCP, adapting to existing structures.
 version: 3.1.0
+category: workflow
+triggers:
+  - "/spec-init"
+  - "iniciar spec"
+  - "configurar spec"
+  - "instalar spec"
 ---
 
 # Spec Init - Initialize Spec-Driven Environment

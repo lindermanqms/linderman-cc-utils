@@ -1,6 +1,13 @@
 ---
 name: spec-memorize
 description: Analisa o contexto atual da sessão para extrair aprendizados, erros e soluções, solicitando confirmação do usuário antes de salvar no Memory MCP.
+version: 0.1.0
+category: workflow
+triggers:
+  - "/spec-memorize"
+  - "memorizar"
+  - "salvar aprendizado"
+  - "consolidar conhecimento"
 ---
 
 # Memorização Manual e Curadoria de Conhecimento

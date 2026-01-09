@@ -1,6 +1,13 @@
 ---
 name: spec-retro
 description: Finaliza uma task, verifica ACs, gera relatório de conclusão e consolida a memória do projeto de forma assíncrona.
+version: 0.1.0
+category: workflow
+triggers:
+  - "/spec-retro"
+  - "finalizar task"
+  - "retrospectiva"
+  - "fechar task"
 arguments:
   - name: task_id
     description: ID da task a ser finalizada (ex: T-1)

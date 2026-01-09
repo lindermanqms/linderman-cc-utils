@@ -1,6 +1,13 @@
 ---
 name: spec-execute
 description: Guia a execução de uma task planejada, lendo sua Spec e coordenando a implementação. Use este comando para iniciar o trabalho em uma task específica ou para retomar o trabalho na task atual em progresso.
+version: 0.2.0
+category: workflow
+triggers:
+  - "/spec-execute"
+  - "executar task"
+  - "iniciar implementação"
+  - "implementar feature"
 arguments:
   - name: task_id
     description: ID da task a ser executada (ex: task-1). Se omitido, o agente buscará a tarefa com status 'inprogress'.
