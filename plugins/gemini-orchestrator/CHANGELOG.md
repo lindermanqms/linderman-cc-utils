@@ -1,5 +1,64 @@
 # Changelog - Gemini Orchestrator Plugin
 
+## [2.3.0] - 2026-01-11
+
+### Added
+- **SKILL.md**: Nova seção "How Scripts Work" (linhas 60-92)
+  - Explica que scripts NÃO são copiados para o projeto
+  - Explica que scripts são executados diretamente do local de instalação
+  - Exemplos de uso correto vs incorreto
+  - Troubleshooting para erros "Script not found"
+  - Rationale: design de "single source of truth" para scripts
+
+- **examples/ directory**: Exemplos práticos separados do SKILL.md
+  - `examples/simple-delegation.md` - Single task delegation workflow
+  - `examples/complex-orchestration.md` - Multi-phase Pro→Flash workflow
+  - Workflow diagrams e decision points
+  - Referencias cruzadas com references/
+
+### Changed
+- **SKILL.md**: Compactado de ~4,200 para ~2,244 palavras
+  - Removidos 88 linhas de exemplos extensos (movidos para examples/)
+  - Mantida estrutura de progressive disclosure
+  - Adicionadas referências a examples/ e references/
+  - Melhor foco como "overview conciso"
+
+- **description (frontmatter)**: Atualizada para incluir:
+  - Trigger adicional: "delegate.sh"
+  - Localização dos scripts: "plugins/gemini-orchestrator/scripts/"
+  - Clarificação: "NOT copied to project"
+
+### Rationale
+
+**Problema reportado**: "A skill não está copiando os scripts corretamente"
+
+**Raiz do problema**: Confusão sobre o design da skill. Usuário esperava que scripts fossem copiados para o projeto, mas o design correto é executá-los diretamente do local de instalação.
+
+**Por que scripts não são copiados?**
+1. ✅ **Single source of truth** - Um delegate.sh para todos os projetos
+2. ✅ **Automatic updates** - Plugin updates automaticamente atualizam o script
+3. ✅ **No duplication** - Sem necessidade de copiar arquivos
+4. ✅ **Consistent behavior** - Mesmo comportamento em todo lugar
+
+**Solução aplicada**:
+- Seção "How Scripts Work" explica o design claramente
+- Exemplos mostram uso correto com path completo
+- Description menciona localização e que não são copiados
+- examples/ directory com workflows completos
+
+**Progressive disclosure aprimorada**:
+- SKILL.md: Overview conciso (~2,244 palavras) ✅ Dentro do ideal (1,500-3,000)
+- examples/: Exemplos práticos detalhados
+- references/: Documentação técnica especializada (12 arquivos)
+
+### Compatibility
+
+- **Backward Compatibility**: ✅ Sem breaking changes (apenas documentação)
+- **Behavioral Compatibility**: ✅ Clarifica comportamento existente
+- **User Impact**: ✅ Positivo - elimina confusão sobre scripts
+
+---
+
 ## [2.2.4] - 2026-01-11
 
 ### Changed

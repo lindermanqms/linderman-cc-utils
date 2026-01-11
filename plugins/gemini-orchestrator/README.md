@@ -169,6 +169,18 @@ Consulte `.gemini-orchestration/README.md` para workflow completo.
 
 ## Versão
 
+**v2.3.0** (2026-01-11)
+- 📚 **CLARIFICAÇÃO IMPORTANTE**: Como scripts funcionam
+  - Adicionada seção "How Scripts Work" no SKILL.md
+  - Scripts NÃO são copiados para o projeto
+  - Scripts são executados diretamente de `plugins/gemini-orchestrator/scripts/`
+  - Rationale: single source of truth, auto-updates, sem duplicação
+- 📁 **NOVA estrutura examples/**
+  - `simple-delegation.md` - Workflow de task única
+  - `complex-orchestration.md` - Workflow multi-fase (Pro→Flash)
+  - Removidos exemplos extensos do SKILL.md (compactado de ~4,200 para ~2,244 palavras)
+- 🎯 **description atualizada**: Agora menciona "delegate.sh" e localização dos scripts
+
 **v2.2.4** (2026-01-11)
 - 🚨 **REFORÇO CRÍTICO**: GOLDEN RULE enfatizada ao máximo no SKILL.md
   - Orchestrator NUNCA deve escrever código (exceto se usuário pedir explicitamente)

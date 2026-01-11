@@ -1,7 +1,7 @@
 ---
 name: gemini-orchestrator
-description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models.
-version: 2.2.1
+description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", "delegate.sh", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models. Scripts are located at plugins/gemini-orchestrator/scripts/ and are executed directly from their installation location (NOT copied to project).
+version: 2.3.0
 ---
 
 # Gemini Orchestrator Skill
@@ -56,6 +56,39 @@ plugins/gemini-orchestrator/scripts/delegate.sh
 ```
 
 **IMPORTANT**: Always use this exact path from the project root. Do NOT search for the script.
+
+### How Scripts Work
+
+**CRITICAL UNDERSTANDING**: Scripts are **NOT copied** to your project. They are **executed directly** from the plugin installation location.
+
+**Why this design?**
+- ✅ **Single source of truth** - One delegate.sh version across all projects
+- ✅ **Automatic updates** - Plugin updates automatically update the script
+- ✅ **No duplication** - No need to copy files across projects
+- ✅ **Consistent behavior** - Same script behavior everywhere
+
+**What this means:**
+- ❌ **DO NOT** expect scripts to be in your project root
+- ❌ **DO NOT** copy scripts to your project directory
+- ✅ **DO** reference scripts with full path from project root
+- ✅ **DO** execute scripts directly from plugin location
+
+**Usage pattern (always from project root):**
+```bash
+# Correct - full path from project root
+./plugins/gemini-orchestrator/scripts/delegate.sh prompt.txt
+
+# Wrong - script is not in current directory
+./delegate.sh prompt.txt  # ❌ Will fail
+
+# Wrong - script is not copied to project
+delegate.sh prompt.txt    # ❌ Will fail
+```
+
+**If you get "Script not found" error:**
+1. Verify you're in project root: `pwd`
+2. Verify script exists: `ls -la plugins/gemini-orchestrator/scripts/delegate.sh`
+3. Use full path: `./plugins/gemini-orchestrator/scripts/delegate.sh`
 
 ### Setup (One-Time)
 
@@ -340,92 +373,23 @@ When in Orchestration Mode, follow these rules **without exception**:
 
 ## Quick Start Examples
 
-### Example 1: Simple Implementation Task
+For detailed working examples with complete workflows, see:
 
-```bash
-# 1. Extract project slug
-PROJECT_SLUG=$(basename $(git rev-parse --show-toplevel))
-# Output: linderman-cc-utils
+- **`examples/simple-delegation.md`** - Single task delegation to gemini-3-flash
+  - JWT authentication implementation walkthrough
+  - Memory integration and Backlog.md updates
+  - Complete validation workflow
 
-# 2. Fetch from memory (YOU do this)
-search_nodes({ query: "linderman-cc-utils auth patterns" })
-# Results: pattern-jwt-storage, pattern-chrome-extension-auth
+- **`examples/complex-orchestration.md`** - Multi-phase workflows (Pro → Flash)
+  - Design phase with gemini-3-pro
+  - Implementation phase with gemini-3-flash
+  - Orchestrator validation and memory persistence
+  - Workflow diagrams and decision points
 
-# 3. Create prompt from template
-cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
-   .gemini-orchestration/prompts/task-10-jwt-auth.txt
-
-# 4. Edit prompt - fill in:
-#    - Memory Context (paste patterns from step 2)
-#    - Project Context (CLAUDE.md relevant sections)
-#    - Acceptance Criteria (from Backlog.md if using spec-workflow)
-#    - Task description
-
-# 5. Execute delegation via script
-./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .gemini-orchestration/prompts/task-10-jwt-auth.txt
-
-# Script outputs:
-# ℹ Auto-detected model: gemini-3-flash-preview
-# ✓ Delegation completed successfully
-# ✓ Report extracted to: .gemini-orchestration/reports/flash-2026-01-11-15-30.md
-
-# 6. Review report
-cat .gemini-orchestration/reports/flash-2026-01-11-15-30.md
-
-# 7. Validate (YOU do this, not agent)
-npm run build
-npm test
-
-# 8. Update Backlog (YOU do this, not agent)
-await backlog_task_update({
-  id: "task-10",
-  notes: "JWT auth implemented. Report: .gemini-orchestration/reports/flash-2026-01-11-15-30.md"
-})
-```
-
-### Example 2: Complex Multi-Phase Orchestration
-
-```bash
-# PHASE 1: Design (gemini-3-pro)
-# 1. Create design prompt
-cp .gemini-orchestration/prompts/TEMPLATE-pro-planning.txt \
-   .gemini-orchestration/prompts/task-15-api-design.txt
-
-# 2. Fill prompt with context
-
-# 3. Execute design phase
-./plugins/gemini-orchestrator/scripts/delegate.sh -m pro \
-  .gemini-orchestration/prompts/task-15-api-design.txt
-
-# 4. Review design report
-cat .gemini-orchestration/reports/pro-2026-01-11-14-00.md
-
-# PHASE 2: Implementation (gemini-3-flash)
-# 5. Create implementation prompt
-cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
-   .gemini-orchestration/prompts/task-15-api-impl.txt
-
-# 6. Add design from Phase 1 to "DESIGN CONTEXT" section
-# (paste content from pro-*.md report)
-
-# 7. Execute implementation
-./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
-  .gemini-orchestration/prompts/task-15-api-impl.txt
-
-# PHASE 3: Validation (YOU as Orchestrator)
-npm run build
-npm test
-npm start &
-curl http://localhost:3000/api/health
-
-# Save to memory
-create_entities([{
-  name: "linderman-cc-utils/task-15/decision-api-architecture",
-  entityType: "decision",
-  observations: ["RESTful API with JWT auth, see pro-*.md"]
-}])
-```
+Additional examples in references/:
+- `references/workflow-patterns.md` - Error Resolution workflow
+- `references/spec-workflow-integration.md` - Backlog.md integration
+- `references/error-resolution.md` - Debugging strategies
 
 ## Prerequisites
 
