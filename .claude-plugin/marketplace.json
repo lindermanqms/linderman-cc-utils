@@ -24,6 +24,11 @@
       "name": "gemini-orchestrator",
       "source": "./plugins/gemini-orchestrator",
       "description": "Sistema de orquestração para delegar tarefas complexas aos modelos Gemini (Pro para planejamento, Flash para implementação) com coleta automática de contexto e integração com memória"
+    },
+    {
+      "name": "git-worktrees",
+      "source": "./plugins/git-worktrees",
+      "description": "Sistema de gerenciamento de Git worktrees para desenvolvimento paralelo em múltiplas branches com symlinks automáticos de dependências"
     }
   ]
 }
