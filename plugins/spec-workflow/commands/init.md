@@ -1,79 +1,315 @@
 ---
 name: spec-init
-description: Initialize Spec-Driven Development environment with Backlog and Memory MCP, adapting to existing structures.
-version: 3.1.0
+description: Inicializa o ambiente Spec-Driven Development com Backlog MCP, limpando resquícios anteriores e configurando estrutura completa
+version: 2.0.0
 category: workflow
 triggers:
   - "/spec-init"
-  - "iniciar spec"
-  - "configurar spec"
-  - "instalar spec"
+  - "inicializar spec workflow"
+  - "setup spec-driven development"
+arguments: []
 ---
 
-# Spec Init - Initialize Spec-Driven Environment
+# Spec-Init: Inicialização e Limpeza do Ambiente
 
-This command initializes or updates the Spec-Driven Development workflow in the project. It is designed to be idempotent and safe to run on existing projects.
+Este comando inicializa ou reinicializa o ambiente Spec-Driven Development, integrando totalmente com o Backlog.md MCP. É idempotente e seguro para executar múltiplas vezes.
 
-## What It Does
+## Workflow de Inicialização (OBRIGATÓRIO)
 
-1.  **Smart Analysis**: Analyzes existing `Backlog.md`, `CLAUDE.md`, and legacy `.cipher/` directory.
-2.  **Legacy Cleanup**: Detects and suggests removal of Cypher configurations and directories.
-3.  **Memory Setup**: Initializes the **Memory MCP** knowledge graph with a strict schema.
-4.  **Robust Backlog Setup**: Creates or updates `Backlog.md`, ensuring required sections exist.
-5.  **Imperative CLAUDE.md Update**: Injects mandatory guidelines for using memory and skills.
-6.  **Structure Enforcement**: Guarantees existence of `backlog/specs` and `backlog/docs`.
+### Fase 1: Validação de Pré-requisitos
 
-## Workflow Steps
+**CRÍTICO**: Verificar se o CLI do Backlog.md está instalado:
 
-### 1. Inicialização do Backlog via Script
-Execute o script de inicialização robusto localizado no plugin:
-`bash ${CLAUDE_PLUGIN_ROOT}/scripts/init-project.sh`
+```bash
+which backlog
+```
 
-Este script garante a instalação do `backlog.md`, inicializa o projeto com integração MCP e aplica o template obrigatório no `Backlog.md`.
-
-### 2. Memory Knowledge Graph Boot
-Initialize a memória do projeto usando o servidor **Memory MCP**:
-1.  **Create Root Entity**: `create_entities([{name: "Project Root", entityType: "Project", observations: ["Iniciado via /spec-init"]}])`.
-2.  **Define Strict Schema**: Registre as entidades: `Project`, `Standard`, `ADR`, `TechStack`, `LessonLearned`.
-
-### 3. Imperative CLAUDE.md Update
-Atualize o `CLAUDE.md` da raiz do projeto para incluir as regras imperativas de uso do MCP e do fluxo Spec-Driven.
-
-### 5. Imperative CLAUDE.md Update
-
-**Content to Inject/Update (MUST be in Portuguese):**
+**Se NÃO estiver instalado:**
 ```markdown
-# Memory & Spec Workflow (IMPERATIVO)
+❌ CLI do Backlog.md não encontrado!
 
-Este projeto utiliza Spec-Driven Development com Memory MCP. O cumprimento destas regras é obrigatório para evitar a repetição de erros e garantir a consistência técnica.
+O plugin spec-workflow requer o CLI do Backlog.md instalado.
 
-## Padrão Estrito de Memória
-Toda informação relevante deve ser salva no Grafo de Conhecimento usando as entidades:
-- **Project**: Visão geral e objetivos.
-- **Standard**: Padrões de código e convenções.
-- **ADR**: Architectural Decision Records (Decisões técnicas e porquês).
-- **TechStack**: Tecnologias e versões.
-- **LessonLearned**: Aprendizados de retrospectivas e soluções de bugs.
+**Instale via npm:**
+npm install -g backlog-md
 
-## Regras de Execução
-1. **CONSULTA OBRIGATÓRIA**: Antes de iniciar qualquer tarefa ou propor mudanças arquiteturais, você DEVE usar `read_graph` ou `search_nodes`. É imperativo verificar se já existem lições aprendidas (`LessonLearned`) ou decisões (`ADR`) que impactem o trabalho atual.
-2. **USO DE SKILLS**: Sempre que disponíveis, utilize as skills do plugin (`/spec-plan`, `/spec-execute`, `/spec-retro`, `/spec-memorize`) em vez de comandos manuais.
-3. **CONSOLIDAÇÃO OBRIGATÓRIA**: Ao finalizar uma tarefa ou descobrir um erro crítico, use `/spec-retro` ou `/spec-memorize`. O conhecimento deve ser estruturado no grafo para que não seja perdido.
+**Ou via homebrew (macOS/Linux):**
+brew install backlog-md
+
+**Após instalar, execute novamente /spec-init**
 ```
 
-### 6. Directory Structure
+**Se estiver instalado, continue para Fase 2.**
 
-Ensure `backlog/specs` and `backlog/docs` exist.
+### Fase 2: Limpeza e Migração de Resquícios
 
-## Success Message
+**Detectar arquivos antigos:**
 
+1. **Verificar Backlog.md existente:**
+   - Se existe e está vazio/minimalista (< 100 linhas) → Mover para `backlog.old/Backlog.md.bak`
+   - Se existe e tem conteúdo substancial → Realizar migração automática (Fase 2.1)
+
+2. **Verificar diretório backlog/ existente:**
+   - Se existe → Mover para `backlog.old/` como backup antes de reinicializar
+
+3. **Limpar entradas antigas no Memory MCP:**
+   - Buscar entidade "Project Root" ou similar
+   - Se existir de execuções anteriores, deletar e recriar
+
+#### Fase 2.1: Migração Automática (Se aplicável)
+
+**Se detectar Backlog.md antigo com tasks/specs:**
+
+```markdown
+🔄 Detectado Backlog.md existente com dados!
+
+📦 Iniciando migração automática...
+   - Backup criado: backlog.old/Backlog.md.bak
+   - Convertendo tasks antigas para novo formato MCP
+   - Renomeando specs .md → .backlog
+   - Preservando histórico e Acceptance Criteria
 ```
-✅ Spec-Driven Development environment updated with Memory MCP!
 
-- 📋 Backlog: [Created | Updated | Verified]
-- 🧠 Memory: Initialized strict schema (Obrigatório).
-- 📁 Structure: verified `backlog/specs` & `backlog/docs`
-- 🤖 CLAUDE.md: [Updated] with IMPERATIVE Memory Pattern.
+**Processo de migração:**
+1. Fazer backup completo em `backlog.old/`
+2. Parsear tasks antigas e extrair metadados
+3. Recriar tasks via MCP com campos completos (priority, labels, etc.)
+4. Renomear specs de `specs/*.md` para `specs/*.backlog`
+5. Vincular specs migradas às tasks correspondentes
 
-🚀 Ready to use! Try `/spec-help`.
+### Fase 3: Inicialização do Backlog MCP
+
+**Executar comando CLI:**
+
+```bash
+backlog init --defaults "$(basename $(pwd))"
 ```
+
+Este comando cria:
+- `Backlog.md` raiz
+- `backlog/` diretório
+- `backlog/config.yml` configuração base
+
+### Fase 4: Configuração do backlog/config.yml
+
+**Atualizar o arquivo com configuração completa:**
+
+```yaml
+project_name: $(basename $(pwd))
+default_assignee: "@Claude"
+default_status: To Do
+statuses:
+  - To Do
+  - In Progress
+  - In Review
+  - Done
+  - Blocked
+labels:
+  - backend
+  - frontend
+  - plugin
+  - skill
+  - documentation
+  - bugfix
+  - enhancement
+  - refactoring
+milestones:
+  - "v1.0 - MVP"
+  - "v2.0 - Full Integration"
+date_format: yyyy-mm-dd HH:mm:ss
+timezonePreference: America/Fortaleza
+defaultEditor: code
+autoCommit: false
+bypassGitHooks: false
+zeroPaddedIds: true
+```
+
+**Criar via script ou edição:**
+```bash
+cat > backlog/config.yml <<'EOF'
+[conteúdo acima]
+EOF
+```
+
+### Fase 5: Criar Estrutura de Documentação
+
+**1. Garantir diretórios existem:**
+```bash
+mkdir -p backlog/specs
+mkdir -p backlog/docs/standards
+mkdir -p backlog/docs/decisions
+```
+
+**2. Criar Constituição do Projeto via CLI:**
+
+```bash
+backlog doc create "Constituição do Projeto" --type guide
+```
+
+**Conteúdo inicial da Constituição** (escrever em `backlog/docs/doc-001 - Constituição do Projeto.md`):
+
+```markdown
+---
+id: doc-001
+title: Constituição do Projeto
+type: guide
+labels: [standards, architecture]
+creation_date: $(date +"%Y-%m-%d %H:%M:%S")
+---
+
+# Constituição do Projeto: $(basename $(pwd))
+
+## Regras Inegociáveis
+
+1. **Spec-First**: Toda feature DEVE ter uma Spec antes de implementação
+2. **AC Obrigatório**: Toda task DEVE ter Acceptance Criteria verificáveis
+3. **Revisão**: Código DEVE passar por /spec-review antes de /spec-retro
+4. **Memória**: Aprendizados críticos DEVEM ser salvos no Basic Memory
+5. **Extensão .backlog**: Specs DEVEM usar extensão .backlog (não .md)
+
+## Padrões de Código
+
+(A ser preenchido durante /spec-align)
+
+## Arquitetura
+
+(A ser documentada durante desenvolvimento)
+
+## Stack Tecnológica
+
+(A ser definida conforme necessidade)
+```
+
+### Fase 6: Inicializar Basic Memory
+
+**Criar nota raiz do projeto:**
+
+```javascript
+write_note({
+  title: `[Project] - $(basename $(pwd))`,
+  content: `---
+type: Project
+tags: [plugin-marketplace, spec-workflow]
+project: $(basename $(pwd))
+---
+# Projeto: $(basename $(pwd))
+
+- Marketplace de plugins para Claude Code
+- Workflow: Spec-Driven Development com Backlog.md MCP
+- Linguagem: Português do Brasil
+- Inicializado via /spec-init v2.0.0
+`
+})
+```
+
+**Criar notas de padrões obrigatórias (exemplos):**
+
+```javascript
+write_note({
+  title: "[Standard] - Uso de MCP",
+  content: `---
+type: Standard
+tags: [mcp, best-practices]
+project: $(basename $(pwd))
+---
+# Uso de ferramentas MCP
+
+- SEMPRE usar ferramentas MCP para gerenciar tasks/specs
+- NUNCA editar arquivos .backlog manualmente
+`
+})
+```
+
+### Fase 7: Atualizar CLAUDE.md
+
+**Injetar regras imperativas no CLAUDE.md da raiz do projeto:**
+
+Localizar seção "## Workflow Obrigatório" ou criar no final:
+
+```markdown
+## Workflow Obrigatório (Spec-Driven Development)
+
+Este projeto usa Spec-Driven Development via Backlog.md MCP.
+
+**REGRAS IMPERATIVAS:**
+
+1. **NUNCA editar arquivos .backlog manualmente** - Use comandos /spec-* ou CLI backlog
+2. **SEMPRE usar comandos /spec-\*** para gerenciar tasks, specs e decisões
+3. **SEMPRE consultar Constituição** antes de implementar (backlog/docs/doc-001...)
+4. **SEMPRE marcar AC como concluídos** antes de /spec-retro
+5. **SEMPRE usar extensão .backlog** para specs (rejeitar .md)
+
+**Comandos disponíveis:**
+- /spec-init: Inicializar/reinicializar ambiente
+- /spec-plan: Criar nova feature com task + spec
+- /spec-execute: Executar task
+- /spec-review: Revisar conformidade
+- /spec-retro: Finalizar task e consolidar memória
+- /spec-replan: Replanejamento estratégico
+- /spec-align: Alinhar Constituição
+- /spec-memorize: Salvar aprendizados no Basic Memory
+- /spec-board: Visualizar Kanban
+- /spec-search: Buscar no backlog
+- /spec-help: Ajuda completa
+
+**Integração MCP:**
+- Backlog MCP: Gerenciamento de tasks, specs, docs, decisões
+- Basic Memory: Persistência de ADRs, lições aprendidas, padrões (Markdown)
+
+**Antes de qualquer tarefa:**
+1. Consultar Basic Memory: `search("termo relacionado")`
+2. Verificar Constituição: Ler `backlog/docs/doc-001...`
+3. Listar tasks relacionadas: `backlog task list --labels <label>`
+```
+
+**Método de atualização:**
+- Ler CLAUDE.md existente
+- Localizar seção "## Workflow Obrigatório" ou adicionar no final
+- Substituir ou adicionar o conteúdo acima
+
+### Saída Esperada
+
+```markdown
+✅ Ambiente Spec-Driven Development Inicializado com Sucesso!
+
+📦 **Backlog MCP**: ✅ Configurado
+   - Backlog.md criado/atualizado
+   - backlog/config.yml configurado com statuses, labels, milestones
+   - Estrutura de diretórios criada:
+     ✓ backlog/specs/
+     ✓ backlog/docs/standards/
+     ✓ backlog/docs/decisions/
+
+🏛️ **Constituição**: ✅ Criada
+   - backlog/docs/doc-001 - Constituição do Projeto.md
+
+🧠 **Basic Memory**: ✅ Inicializado
+   - Nota "[Project] - $(basename $(pwd))" criada
+   - Persistência em Markdown configurada
+
+📝 **CLAUDE.md**: ✅ Atualizado
+   - Regras imperativas injetadas
+   - Comandos /spec-* documentados
+
+🔄 **Migração**: $(se aplicável: "✅ Concluída - Backup em backlog.old/")
+
+🎯 **Próximos Passos:**
+   1. Explore o backlog: `backlog board`
+   2. Crie sua primeira feature: `/spec-plan "Nome da Feature"`
+   3. Consulte a ajuda: `/spec-help`
+   4. Visualize a Constituição: Ler backlog/docs/doc-001...
+
+📚 **Recursos:**
+   - CLI Backlog: https://github.com/MrLesk/Backlog.md
+   - Documentação spec-workflow: /spec-help
+```
+
+## Notas Importantes
+
+- **Limpeza Automática**: O comando detecta e limpa inicializações parciais anteriores, movendo para `backlog.old/`
+- **Validação Obrigatória**: Verifica se o CLI `backlog` está instalado antes de prosseguir. Se não estiver, instrui instalação.
+- **Idempotência**: Pode ser executado múltiplas vezes sem duplicar dados. Detecta estado existente e ajusta.
+- **Migração Automática**: Preserva dados de Backlog.md antigo, convertendo para novo formato MCP com todos os campos.
+- **Backup Seguro**: Todos os arquivos antigos são movidos para `backlog.old/` antes de qualquer modificação.
+- **Extensão .backlog**: Durante migração, specs antigas `.md` são renomeadas para `.backlog` automaticamente.
+- **CLI Obrigatório**: O comando depende do CLI `backlog` do sistema. Não usa apenas ferramentas MCP.

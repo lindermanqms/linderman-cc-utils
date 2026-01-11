@@ -1,7 +1,7 @@
 ---
 name: spec-memorize
 description: Analisa o contexto atual da sessão para extrair aprendizados, erros e soluções, solicitando confirmação do usuário antes de salvar no Memory MCP.
-version: 0.1.0
+version: 2.0.0
 category: workflow
 triggers:
   - "/spec-memorize"
@@ -33,8 +33,8 @@ Este comando permite que você capture insights e decisões técnicas importante
 ## Execução da Memorização
 
 Após a aprovação do usuário:
-1.  Use as ferramentas do **Memory MCP** (`create_entities`, `add_observations`, `create_relations`) para salvar as informações.
-2.  Garanta a aderência ao **Padrão Estrito** de entidades.
+1.  Use as ferramentas do **Basic Memory** (`write_note`) para salvar as informações.
+2.  Garanta a aderência ao **Padrão de Notas Estruturadas**.
 
 ## Saída Esperada
 
@@ -47,3 +47,15 @@ Proposta de memorização:
 
 Deseja salvar estes itens? (Sim/Não/Editar)
 ```
+
+## Notas Importantes
+
+- **Memória é Curada**: SEMPRE pedir confirmação do usuário antes de salvar no Basic Memory
+- **Contexto Recente**: Analisar últimas interações, erros, soluções e discussões técnicas da sessão atual
+- **Padrão de Título**: Usar o formato `[TYPE] - Título Descritivo` (ex: `[ADR] - Uso do Basic Memory`)
+- **Conteúdo Estruturado**: Usar frontmatter YAML para metadados (type, tags, project) e Markdown para o corpo
+- **Relações**: Vincular a nota à task atual ou outras notas relevantes usando o parâmetro `relations` no `write_note`
+- **Não Duplicar**: Antes de criar, verificar se já existe nota similar via ferramenta `search`
+- **Sessão vs Tarefa**: Este comando foca na sessão atual - use `/spec-retro` para consolidação de tasks específicas
+- **Integração com Backlog**: Aprendizados relacionados a tasks devem mencionar task-id nas relações e observações
+- **Periodicidade**: Executar ao final de sessões produtivas ou após resolver problemas complexos

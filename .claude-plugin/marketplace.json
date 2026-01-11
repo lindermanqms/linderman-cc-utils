@@ -19,6 +19,11 @@
       "name": "spec-workflow",
       "source": "./plugins/spec-workflow",
       "description": "Workflow Spec-Driven Development com integração Backlog.md e Cipher Memory"
+    },
+    {
+      "name": "gemini-orchestrator",
+      "source": "./plugins/gemini-orchestrator",
+      "description": "Sistema de orquestração para delegar tarefas complexas aos modelos Gemini (Pro para planejamento, Flash para implementação) com coleta automática de contexto e integração com memória"
     }
   ]
 }

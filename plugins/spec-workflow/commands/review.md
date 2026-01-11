@@ -1,7 +1,7 @@
 ---
 name: spec-review
-description: Examina a conformidade do código com a "Constituição" do projeto e os requisitos específicos da task.
-version: 0.1.0
+description: Examina a conformidade do código com a "Constituição" do projeto e os requisitos específicos da task. Valida ACs automaticamente.
+version: 2.0.0
 category: workflow
 triggers:
   - "/spec-review"
@@ -15,49 +15,246 @@ arguments:
 
 # Spec-Review: Auditoria de Conformidade e Qualidade
 
-Este comando realiza uma revisão rigorosa antes da finalização de uma task, garantindo que o código não apenas funcione, mas siga todos os padrões estabelecidos.
+Este comando realiza uma revisão rigorosa antes da finalização de uma task, garantindo que o código não apenas funcione, mas siga todos os padrões estabelecidos e tenha TODOS os ACs concluídos.
 
 ## Instruções para o Agente
 
-### 1. Preparação
-- Leia os detalhes da task `{{task-id}}` usando `backlog_task_get`.
-- Localize e leia o documento de **Spec** associado (mencionado no campo `plan` ou nos documentos do projeto).
-- Identifique os arquivos da **"Constituição"** do projeto (geralmente em `docs/standards/`, `backlog/docs/` ou arquivos como `CLAUDE.md`).
+### 1. Preparação e Leitura
+
+**Buscar task:**
+```javascript
+const task = backlog_task_get("{{task-id}}")
+```
+
+**Ler Spec associada:**
+```javascript
+// Extrair path da spec
+const specMatch = task.description?.match(/specs\/(SPEC-\d+-[\w-]+\.backlog)/) ||
+                  task.notes?.match(/specs\/(SPEC-\d+-[\w-]+\.backlog)/)
+
+if (specMatch) {
+  const spec = backlog_doc_get(specId)
+}
+```
+
+**Ler Constituição do projeto:**
+```javascript
+const constituicao = backlog_doc_list({ path: "docs/standards/" })
+// Ler doc-001 - Constituição do Projeto
+// Ler outros padrões relevantes
+```
 
 ### 2. Auditoria Técnica
-- **Verificação de ACs:** Para cada Critério de Aceite da task, verifique no código se a implementação está completa e correta.
-- **Alinhamento Arquitetural:** O código respeita a arquitetura proposta na Spec e os padrões globais do projeto?
-- **Qualidade e Limpeza:**
-  - Existem comentários `TODO`, `FIXME` ou logs de debug remanescentes?
-  - A nomenclatura segue as convenções do projeto?
-  - A cobertura de testes (se exigida) é adequada?
 
-### 3. Relatório de Conformidade (Conformity Report)
+#### 2.1 Verificação de Status
 
-Apresente o resultado da revisão para o usuário:
+**Verificar que task está em "In Review":**
+```javascript
+if (task.status !== "In Review") {
+  console.warn("⚠️ Task não está em status 'In Review'")
+  console.log(`   Status atual: ${task.status}`)
+  console.log("   Recomendação: Executar /spec-execute primeiro")
+}
+```
+
+#### 2.2 Validação Automática de ACs (NOVO)
+
+**CRÍTICO**: Verificar que TODOS os ACs estão marcados como concluídos:
+
+```javascript
+const uncheckedACs = task.acceptance_criteria.filter(ac => ac.startsWith("[ ]"))
+const checkedACs = task.acceptance_criteria.filter(ac => ac.startsWith("[x]"))
+
+console.log(`📋 Acceptance Criteria: ${checkedACs.length}/${task.acceptance_criteria.length} concluídos`)
+
+if (uncheckedACs.length > 0) {
+  console.log("\n❌ ACs NÃO concluídos:")
+  uncheckedACs.forEach(ac => console.log(`   ${ac}`))
+
+  console.log("\n🔧 Para marcar ACs como concluídos:")
+  console.log(`   backlog task edit ${task.id} --check-ac "texto do AC"`)
+
+  // BLOQUEAR revisão se houver ACs pendentes
+  return {
+    status: "REFUSED",
+    reason: "Acceptance Criteria incompletos",
+    uncheckedCount: uncheckedACs.length
+  }
+}
+
+console.log("✅ Todos os ACs estão marcados como concluídos!")
+```
+
+#### 2.3 Verificação de Código
+
+**Para cada AC marcado como [x], verificar implementação no código:**
+
+```javascript
+// Ler código relevante conforme spec
+// Validar que cada AC está realmente implementado, não apenas marcado
+
+// Exemplos de verificações:
+// - AC "Endpoint /auth/login retorna JWT" → Verificar arquivo de rotas/controllers
+// - AC "Testes com cobertura > 80%" → Executar coverage report
+// - AC "Documentação atualizada" → Verificar README/docs
+```
+
+#### 2.4 Alinhamento Arquitetural
+
+**Verificar conformidade com Constituição:**
+
+- ✅ Padrões de nomenclatura seguidos?
+- ✅ Estrutura de arquivos/diretórios correta?
+- ✅ Dependências declaradas apropriadamente?
+- ✅ Sem código duplicado?
+- ✅ Sem TODOs/FIXMEs críticos?
+- ✅ Sem logs de debug/console.log remanescentes?
+
+**Verificar conformidade com Spec:**
+
+- ✅ Arquitetura proposta implementada?
+- ✅ APIs/endpoints conforme especificado?
+- ✅ Modelos de dados corretos?
+- ✅ Casos de borda tratados?
+
+#### 2.5 Qualidade de Código
+
+**Checklist:**
+
+- ✅ Testes automatizados presentes?
+- ✅ Cobertura de testes adequada?
+- ✅ Documentação inline onde necessário?
+- ✅ Tratamento de erros robusto?
+- ✅ Performance aceitável?
+- ✅ Segurança (sem vulnerabilidades OWASP Top 10)?
+
+### 3. Relatório de Conformidade
+
+**Gerar relatório estruturado:**
 
 ```markdown
 🔍 **Relatório de Revisão: Task {{task-id}}**
 
-**Status dos Critérios de Aceite (ACs):**
-- [✅] AC1: [Nome do AC] - Verificado em `caminho/do/arquivo`
-- [❌] AC2: [Nome do AC] - [Explicação do que falta ou está incorreto]
+**Task**: {{task.title}}
+**Prioridade**: {{task.priority}}
+**Milestone**: {{task.milestone}}
+**Labels**: {{task.labels.join(", ")}}
 
-**Conformidade com a Constituição:**
-- [✅] Padrões de Nomenclatura
-- [⚠️] Arquitetura: [Observação sobre possível desvio]
-- [✅] Testes Automatizados
+---
 
-**Veredito:**
-- 🔴 **REFUSED:** [Motivo principal do bloqueio]
-- 🟢 **APPROVED:** [Parabéns e sugestões menores]
+## ✅ Acceptance Criteria ({{checkedACs.length}}/{{task.acceptance_criteria.length}})
+
+{{Para cada AC:}}
+- [✅] {{AC texto}} - ✓ Verificado em `caminho/arquivo:linha`
+  {{ou}}
+- [❌] {{AC texto}} - ✗ Não implementado corretamente: {{explicação}}
+
+---
+
+## 📋 Conformidade com Constituição
+
+**Padrões de Código:**
+- [✅] Nomenclatura: Seguindo convenções
+- [✅] Estrutura: Arquivos nos locais corretos
+- [⚠️] Qualidade: {{observação se houver}}
+
+**Arquitetura:**
+- [✅] Alinhada com Spec: {{confirmação}}
+- [⚠️] Desvio detectado: {{se houver}}
+
+**Testes:**
+- [✅] Unitários: {{N testes}} adicionados
+- [✅] Cobertura: {{X%}} (meta: >80%)
+- [❌] Faltam testes para: {{se aplicável}}
+
+**Documentação:**
+- [✅] README atualizado
+- [✅] Comentários inline adequados
+- [⚠️] Falta documentar: {{se aplicável}}
+
+---
+
+## 🔍 Pontos de Atenção
+
+{{Se houver problemas encontrados:}}
+1. **{{Categoria}}** ({{arquivo:linha}}):
+   - Problema: {{descrição}}
+   - Impacto: {{severidade}}
+   - Sugestão: {{como corrigir}}
+
+---
+
+## 🎯 Veredito Final
+
+{{Se TODOS ACs concluídos E sem problemas críticos:}}
+### 🟢 **APPROVED**
+
+Parabéns! A implementação está em conformidade com:
+- ✅ Todos os Acceptance Criteria atendidos
+- ✅ Padrões da Constituição respeitados
+- ✅ Qualidade de código adequada
+
+**Sugestões menores (opcional):**
+- {{melhorias não-bloqueantes}}
+
+**Próximo passo:**
+Execute `/spec-retro {{task-id}}` para finalizar a task.
+
+{{Se houver problemas:}}
+### 🔴 **REFUSED**
+
+**Motivo do bloqueio:**
+{{Razão principal - ex: "3 ACs não concluídos", "Falta cobertura de testes"}}
+
+**Ações necessárias antes de aprovar:**
+1. {{Ação corretiva 1}}
+2. {{Ação corretiva 2}}
+
+**Manter task em status**: In Review (ou voltar para In Progress)
+
+Após correções, execute `/spec-review {{task-id}}` novamente.
 ```
 
-### 4. Próximos Passos
-- Se **REFUSED**: Liste as correções necessárias e mantenha a task em `in_progress`.
-- Se **APPROVED**: Sugira o uso de `/spec-retro {{task-id}}` para encerrar a tarefa formalmente.
+### 4. Atualizar Task (Se necessário)
 
-## Notas
-- Seja crítico e detalhista.
-- Aponte trechos específicos de código que precisam de atenção.
-- Não aprove se houver falhas óbvias nos requisitos da Spec.
+**Se REFUSED, adicionar nota:**
+
+```javascript
+backlog_task_update(task.id, {
+  notes: task.notes + `\n\n## 🔴 Review REFUSED (${timestamp})\n` +
+         `Motivo: ${razão}\n` +
+         `Ações necessárias:\n${açõesLista}`
+})
+```
+
+**Se APPROVED, adicionar nota:**
+
+```javascript
+backlog_task_update(task.id, {
+  notes: task.notes + `\n\n## 🟢 Review APPROVED (${timestamp})\n` +
+         `Todos os ACs validados\n` +
+         `Conformidade verificada\n` +
+         `Pronta para /spec-retro`
+})
+```
+
+### 5. Próximos Passos
+
+**Se REFUSED:**
+- Listar correções necessárias detalhadamente
+- Manter task em status "In Review" ou voltar para "In Progress"
+- Solicitar que desenvolvedor corrija e execute `/spec-review` novamente
+
+**Se APPROVED:**
+- Sugerir execução de `/spec-retro {{task-id}}` para encerrar formalmente
+- Task pode prosseguir para status "Done"
+
+## Notas Importantes
+
+- **Validação Automática de ACs**: O comando agora verifica automaticamente se TODOS os ACs estão marcados como [x] antes de prosseguir
+- **Bloqueio Obrigatório**: Se houver ACs pendentes ([ ]), a revisão é automaticamente REFUSED
+- **CLI para Marcar ACs**: Orientar uso de `backlog task edit --check-ac` para marcar ACs
+- **Critério Rigoroso**: Seja crítico e detalhista - melhor reprovar agora do que ter bugs em produção
+- **Apontar Código Específico**: Sempre referenciar arquivos e linhas exatas (ex: `src/auth.ts:42`)
+- **Sem Aprovação Automática**: NUNCA aprovar se houver falhas óbvias, mesmo que pequenas
+- **Rastreabilidade**: Adicionar notas na task para histórico completo de reviews

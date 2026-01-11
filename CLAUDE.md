@@ -8,6 +8,9 @@ This is a **Claude Code plugin marketplace** that hosts custom plugins for Claud
 
 Currently contains:
 - **pje-extensions**: Plugin providing skills for developing Chrome extensions for PJe (Processo Judicial Eletrônico - Brazilian court system, specifically TRF5)
+- **reverse-engineering-utils**: General purpose tools for web reverse engineering and HAR analysis
+- **spec-workflow**: Workflow Spec-Driven Development com integração Backlog.md e Basic Memory
+- **gemini-orchestrator**: Sistema de orquestração para delegar tarefas complexas aos modelos Gemini (Pro para planejamento, Flash para implementação) com coleta automática de contexto e integração com memória
 
 ## Architecture
 
@@ -176,3 +179,494 @@ When updating:
 2. **Modular Documentation**: One reference file per topic
 3. **Trigger Clarity**: Explicitly define when skills should activate
 4. **Domain Focus**: Each skill serves a specific domain or use case
+
+---
+
+## Spec-Workflow Plugin (v2.0)
+
+Este projeto utiliza o plugin **spec-workflow** para gerenciamento de projeto via **Spec-Driven Development** integrado 100% ao **Backlog.md MCP**.
+
+### Filosofia Spec-Driven Development
+
+**Princípios Fundamentais:**
+1. **Spec-First**: Toda feature DEVE ter uma Spec antes de implementação
+2. **AC Obrigatório**: Toda task DEVE ter Acceptance Criteria verificáveis
+3. **MCP-Only**: NUNCA editar arquivos `.backlog` manualmente
+4. **Extensão .backlog**: Specs e documentos DEVEM usar extensão `.backlog` (não `.md`)
+5. **Revisão Obrigatória**: Código DEVE passar por `/spec-review` antes de `/spec-retro`
+6. **Memória Ativa**: Aprendizados críticos DEVEM ser salvos no Basic Memory
+
+### Integração com Backlog.md MCP
+
+O plugin utiliza o servidor MCP **Backlog.md** (https://github.com/MrLesk/Backlog.md) para gerenciar:
+
+**Tasks Completas** com TODOS os campos MCP:
+```javascript
+backlog_task_create({
+  title, type, status,
+  priority,      // critical, high, medium, low
+  labels,        // ["backend", "security", "api"]
+  milestone,     // "v1.0 - MVP"
+  assignee,      // "@Claude"
+  dependencies,  // ["task-5", "task-12"]
+  acceptance_criteria,  // ["[ ] AC1", "[ ] AC2"]
+  plan,          // Plano de implementação estruturado
+  notes          // Observações incrementais
+})
+```
+
+**Specs com extensão .backlog** (OBRIGATÓRIA):
+- Localização: `specs/SPEC-{ID}-{slug}.backlog`
+- Formato: Markdown com frontmatter YAML
+- Conteúdo: Requisitos, arquitetura, ACs, plano técnico
+
+**Documentos de Padrões** (Constituição):
+- Localização: `backlog/docs/standards/*.backlog`
+- CRUD via MCP: `backlog_doc_create`, `backlog_doc_update`, etc.
+- Extensão: `.backlog` (OBRIGATÓRIA)
+
+**ADRs** (Architecture Decision Records):
+- Criação: `backlog_decision_create({ title, context, decision, consequences, alternatives, status })`
+- Listagem: `backlog_decision_list()`
+
+### Comandos Disponíveis
+
+#### Ciclo de Vida
+- `/spec-init` - Inicializar ambiente (CLI validation, migration, config)
+- `/spec-plan` - Criar task + spec com TODOS os campos MCP
+- `/spec-execute` - Executar task (dependency check, subtasks, incremental notes)
+- `/spec-review` - Revisar (automatic AC validation, blocking logic)
+- `/spec-retro` - Finalizar (4-item checklist, milestone progress, Basic Memory)
+
+#### Gerenciamento
+- `/spec-replan` - Reestruturar backlog (dependency/milestone impact analysis)
+- `/spec-align` - CRUD completo de documentos de padrões
+- `/spec-memorize` - Salvar aprendizados no Basic Memory
+
+#### Visualização
+- `/spec-board` - Kanban interativo com estatísticas
+- `/spec-search` - Busca fuzzy em tasks/specs/docs/ADRs
+
+### Estrutura de Arquivos
+
+```
+linderman-cc-utils/
+├── Backlog.md                    # Inicializado via backlog init
+├── backlog/
+│   ├── config.yml                # Statuses, labels, milestones
+│   ├── task-001 - Feature X.md
+│   ├── task-002 - Bug Y.md
+│   ├── specs/
+│   │   ├── SPEC-001-auth.backlog      # ← .backlog OBRIGATÓRIA
+│   │   └── SPEC-002-api.backlog
+│   └── docs/
+│       └── standards/
+│           ├── constituicao.backlog    # ← .backlog OBRIGATÓRIA
+│           └── padroes-codigo.backlog
+└── plugins/
+    └── spec-workflow/
+        └── commands/                   # v2.0 - Redesign completo
+```
+
+### Regras Inegociáveis
+
+Quando trabalhando neste projeto:
+
+1. **NUNCA** editar arquivos `.backlog` manualmente - usar sempre MCP tools
+2. **SEMPRE** usar extensão `.backlog` para specs e docs de padrões
+3. **OBRIGATÓRIO** validar CLI `backlog` está instalado antes de usar comandos
+4. **PROIBIDO** aprovar task sem TODOS os ACs marcados como `[x]`
+5. **OBRIGATÓRIO** passar por `/spec-review` antes de `/spec-retro`
+6. **PROIBIDO** deletar tasks - arquivar via `backlog_task_archive`
+
+### Ferramentas MCP Disponíveis
+
+**Tasks:**
+- `backlog_task_create()` - Criar task com todos os campos
+- `backlog_task_get(id)` - Ler task
+- `backlog_task_list({ status, priority, milestone })` - Listar filtrado
+- `backlog_task_update(id, { ... })` - Atualizar
+- `backlog_task_archive(id)` - Arquivar (não deletar!)
+
+**Documentos:**
+- `backlog_doc_create({ title, type, path, labels, content })` - path DEVE terminar em `.backlog`
+- `backlog_doc_get(id)` - Ler documento
+- `backlog_doc_list({ path, type })` - Listar documentos
+- `backlog_doc_update(id, { content, notes })` - Atualizar
+
+**Decisões:**
+- `backlog_decision_create({ title, context, decision, consequences, alternatives, status })` - Criar ADR
+- `backlog_decision_list()` - Listar ADRs
+- `backlog_decision_get(id)` - Obter ADR específica
+
+### CLI do Backlog
+
+**Instalação:**
+```bash
+npm install -g backlog-md
+```
+
+**Comandos úteis:**
+```bash
+backlog board                # Kanban interativo
+backlog browser              # Interface web
+backlog search "termo"       # Busca fuzzy
+backlog task view task-10    # Ver detalhes da task
+```
+
+### Workflow Típico
+
+```bash
+# 1. Inicialização (uma vez)
+/spec-init
+
+# 2. Planejar feature
+/spec-plan "Sistema de Autenticação"
+# → task-10 criada
+# → SPEC-010-sistema-autenticacao.backlog criada
+
+# 3. Executar
+/spec-execute task-10
+# → Dependências verificadas
+# → Status: To Do → In Progress → In Review
+# → ACs marcados progressivamente
+
+# 4. Revisar
+/spec-review task-10
+# → Validação automática de ACs
+# → APPROVED ou REFUSED
+
+# 5. Finalizar
+/spec-retro task-10
+# → Checklist de 4 itens validado
+# → Status: Done
+# → Milestone progress: 7/10 (70%)
+# → Basic Memory consolidado
+
+# 6. Visualizar
+/spec-board --milestone "v1.0 - MVP"
+/spec-search "autenticação"
+```
+
+### Recursos Adicionais
+
+- **Documentação Completa**: `/spec-help`
+- **MCP Server**: https://github.com/MrLesk/Backlog.md
+- **Basic Memory**: Notas em Markdown para lições aprendidas, ADRs, padrões
+- **Constituição**: `backlog/docs/standards/constituicao.backlog`
+
+### Novidades na v2.0
+
+- ✅ Integração 100% com Backlog.md MCP
+- ✅ Uso de TODOS os campos MCP (priority, labels, milestones, dependencies)
+- ✅ Extensão `.backlog` obrigatória para specs e docs
+- ✅ Validação automática de ACs em `/spec-review`
+- ✅ Gerenciamento de dependências em `/spec-execute`
+- ✅ Análise de impacto em milestones/dependências em `/spec-replan`
+- ✅ CRUD completo de documentos em `/spec-align`
+- ✅ Novos comandos: `/spec-board` e `/spec-search`
+- ✅ Migração automática em `/spec-init`
+- ✅ Progresso de milestones em `/spec-retro`
+
+---
+
+## Gemini Orchestrator Plugin (v1.0)
+
+Plugin de orquestração para delegar tarefas complexas aos modelos Gemini através do `gemini-cli`, com coleta automática de contexto e integração com Basic Memory.
+
+### Filosofia Core
+
+**Princípio Fundamental:**
+> **"You are the conductor of a symphony of AI models. Coordinate, don't code."**
+
+O orchestrator **NUNCA** escreve código diretamente. Ele sempre delega para o modelo Gemini apropriado.
+
+### Arquitetura
+
+**Componentes:**
+1. **Agent**: `gemini-orchestrator` - Coordenador principal que gerencia delegações
+2. **Skill**: `gemini-delegate` - Skill opcional para facilitar invocação
+
+**Delegation Strategy:**
+- `gemini-3-pro-preview`: Planning, architecture design, problem analysis (SPECIFY "PLANNING task")
+- `gemini-3-flash-preview`: Implementation, coding, bug fixes
+- **Orchestrator (Sonnet)**: Final validation, tests, approval
+
+### Trigger Phrases
+
+O agent é automaticamente invocado quando detecta:
+- "delegate to gemini"
+- "use gemini for"
+- "let gemini handle"
+- "orchestrate with gemini"
+- "gemini-cli"
+
+### Workflow Patterns
+
+**1. Simple Delegation (Tarefa Única)**
+```
+User: "Delegate to gemini: implement JWT authentication"
+
+Orchestrator:
+├─ EXTRACT PROJECT SLUG (basename $(git rev-parse --show-toplevel))
+├─ FETCH FROM MEMORY (patterns, decisions, errors)
+├─ COLLECT CONTEXT (CLAUDE.md, specs, existing code)
+├─ DETERMINE MODEL (Flash para implementação)
+├─ EXECUTE DELEGATION (gemini-cli)
+├─ SAVE TO MEMORY (patterns descobertos)
+├─ VALIDATE (testes como Sonnet)
+└─ REPORT RESULTS
+```
+
+**2. Complex Orchestration (Multi-Step)**
+```
+User: "Let gemini design and implement the API layer"
+
+Orchestrator:
+├─ EXTRACT PROJECT SLUG
+├─ FETCH MEMORY CONTEXT
+├─ COLLECT INITIAL CONTEXT (Explore agent)
+├─ CREATE ORCHESTRATION PLAN (TodoWrite)
+│
+├─ PHASE 1: DESIGN (gemini-3-pro-preview)
+│   ├─ Fetch domain knowledge from memory
+│   ├─ Delegate architecture design
+│   ├─ Process design JSON
+│   └─ Save ADR to memory
+│
+├─ PHASE 2: IMPLEMENTATION (gemini-3-flash-preview)
+│   ├─ Pass design from Phase 1
+│   ├─ Fetch implementation patterns from memory
+│   ├─ Delegate coding
+│   └─ Save code patterns to memory
+│
+├─ FINAL TESTS (Sonnet)
+└─ SYNTHESIZE RESULTS
+```
+
+**3. Error Resolution**
+```
+User: "Use gemini to fix this error"
+
+Orchestrator:
+├─ CHECK MEMORY FOR SIMILAR ERRORS
+│   └─ If found: Apply known solution
+├─ DELEGATE DIAGNOSIS (gemini-3-pro)
+│   └─ Pro analyzes and proposes solution
+├─ DELEGATE FIX (gemini-3-flash)
+│   └─ Flash implements the fix
+├─ SAVE ERROR RESOLUTION TO MEMORY
+└─ VALIDATE FIX (Sonnet)
+```
+
+### Integração com Basic Memory
+
+**Auto-Fetch (Antes de TODA delegação):**
+
+1. **Conhecimento global:** `search_nodes({ query: "{slug} conventions patterns" })`
+2. **Conhecimento de task/spec:** `open_nodes({ names: ["{slug}/task-10", "{slug}/spec-010"] })`
+3. **Padrões do domínio:** `search_nodes({ query: "{slug} {domain} patterns" })`
+
+**Auto-Save (Após delegações importantes):**
+
+1. **ADRs** - Architecture Decision Records
+   - Quando: Após delegação ao Pro que resulta em decisão arquitetural
+   - Entidade: `{slug}/spec-{id}/decision-{slug}`
+   - Conteúdo: Contexto, decisão, alternativas, consequências
+
+2. **Patterns** - Padrões Descobertos
+   - Quando: Delegação identifica padrão de código ou solução recorrente
+   - Entidade: `{slug}/global/pattern-{slug}`
+   - Conteúdo: Descrição, uso, exemplos, quando aplicar
+
+3. **Errors** - Erros Resolvidos
+   - Quando: Após workflow de Error Resolution
+   - Entidade: `{slug}/task-{id}/error-{slug}` ou `{slug}/global/error-{slug}`
+   - Conteúdo: Sintoma, causa raiz, solução, prevenção
+
+**Prefixação Automática:**
+
+Todas as entidades usam o **slug do projeto** como prefixo para prevenir colisões:
+```
+projeto: linderman-cc-utils
+
+Entidades criadas:
+├─ linderman-cc-utils/global/pattern-jwt-auth
+├─ linderman-cc-utils/spec-010/decision-api-design
+├─ linderman-cc-utils/task-05/error-port-conflict
+└─ linderman-cc-utils/agents/gemini-orchestrator
+```
+
+### Regras Absolutas
+
+Quando trabalhando com o orchestrator:
+
+1. ❌ **NUNCA** usar Edit/Write tools para implementação de código
+2. ❌ **NUNCA** usar Bash para codificação - apenas para invocar gemini-cli
+3. ✅ **SEMPRE** delegar codificação para gemini-3-flash-preview
+4. ✅ **SEMPRE** delegar planejamento para gemini-3-pro-preview (especificar "PLANNING task")
+5. ✅ **SEMPRE** fornecer contexto EXPLÍCITO aos agentes Gemini
+6. ✅ **PODE** invocar Explore agent (via Task tool) para análise de codebase
+7. ✅ **EXECUTAR** testes finais e validações (como Sonnet)
+8. ✅ **SEMPRE** buscar do memory antes de delegações
+9. ✅ **SEMPRE** salvar insights importantes no memory
+10. ✅ **SEMPRE** usar prefixo de projeto slug nas entidades do memory
+
+### Integração com Spec-Workflow
+
+Quando usado com spec-workflow:
+
+**ANTES da execução:**
+- Verifica SPEC no Backlog.md
+- Lê Acceptance Criteria
+- Usa ACs como requisitos nas delegações
+
+**DURANTE execução:**
+- Cria subtasks via TodoWrite
+- Atualiza `notes` da task com progresso
+- Marca ACs como implementados
+
+**APÓS conclusão:**
+- Sugere `/spec-review`
+- Valida TODOS os ACs implementados
+- Aguarda aprovação
+
+### Pré-requisitos
+
+1. **Instalar gemini-cli:**
+```bash
+npm install -g gemini-cli
+```
+
+2. **Configurar API key:**
+```bash
+export GEMINI_API_KEY="sua-chave-aqui"
+```
+
+3. **Basic Memory MCP ativo** (para integração com memória)
+
+### Prompt Templates
+
+**Para gemini-3-pro-preview (Reasoning):**
+```bash
+gemini -p "
+IMPORTANT: This is a PLANNING task (NOT implementation).
+
+TASK: [objetivo específico]
+
+MEMORY CONTEXT:
+[conhecimento prévio do projeto]
+
+PROJECT CONTEXT:
+- Standards: [CLAUDE.md]
+- Architecture: [padrões do Explore]
+
+ANALYSIS REQUIRED:
+1. [aspecto 1]
+2. [aspecto 2]
+
+OUTPUT FORMAT:
+- Structured reasoning
+- Trade-off analysis
+- Recommendation with rationale
+" --model gemini-3-pro-preview
+```
+
+**Para gemini-3-flash-preview (Coding):**
+```bash
+gemini -p "
+You are Gemini-3-Flash, expert developer.
+
+TASK: [tarefa de codificação]
+
+MEMORY CONTEXT:
+[padrões e soluções prévias]
+
+PROJECT CONTEXT:
+- Standards: [CLAUDE.md]
+- Existing code: [arquivos relevantes]
+
+ACCEPTANCE CRITERIA:
+- [ ] AC 1
+- [ ] AC 2
+
+OUTPUT:
+- Complete, functional code
+- Error handling
+- Best practices
+" --model gemini-3-flash-preview
+```
+
+### Matriz de Responsabilidades
+
+| Tarefa | Executor | Notas |
+|--------|----------|-------|
+| Planejamento/Design | gemini-3-pro | Especificar "PLANNING task" |
+| Análise de problemas | gemini-3-pro | Especificar "PROBLEM RESOLUTION" |
+| Ler código para análise | gemini-3-pro | Pode ler, NÃO implementa |
+| Ajustar permissões | gemini-3-pro | Durante resolução de problemas |
+| Codificação | gemini-3-flash | Pode executar Bash/apps |
+| Executar scripts em dev | gemini-3-flash | Durante implementação |
+| Iniciar servidores em dev | gemini-3-flash | Durante implementação |
+| Usar MCP em dev | gemini-3-flash | Quando necessário |
+| Testes finais | Orchestrator (Sonnet) | Após delegações |
+| Executar servers para validação | Orchestrator | Testes end-to-end |
+| Usar MCP para validação | Orchestrator | Quando necessário |
+| Aprovação final | Orchestrator | Tomador de decisão |
+
+### Exemplo Completo
+
+```
+User: "Delegate to gemini: implement JWT authentication for the PJe extension"
+
+=== ORCHESTRATION STARTED ===
+
+[1/7] Extracting project slug...
+      → linderman-cc-utils
+
+[2/7] Fetching from memory...
+      → Found: pattern-chrome-extension-auth
+      → Found: decision-storage-strategy
+
+[3/7] Collecting context...
+      ✓ Read CLAUDE.md
+      ✓ Read spec-010-auth.backlog
+      ✓ Explored existing auth patterns
+      ✓ Identified reference: https://jwt.io/introduction
+
+[4/7] Delegating to gemini-3-flash-preview...
+      ⏳ Delegation in progress...
+      ✓ Completed in 12.4s
+
+[5/7] Saving to memory...
+      ✓ Saved pattern: jwt-chrome-extension-storage
+      ✓ Created relation: task-10 → pattern-jwt-storage
+
+[6/7] Validating implementation...
+      $ npm test
+      ✓ All tests passed
+
+[7/7] Reporting results...
+
+=== ORCHESTRATION COMPLETE ===
+
+Task: Implement JWT authentication
+Total Time: 18.7s
+Delegations: 1 (Flash)
+Memory Operations: 2 fetch, 1 save
+
+RESULTS:
+✓ JWT service implemented
+✓ Token storage in chrome.storage.local
+✓ All 5 Acceptance Criteria validated
+```
+
+### Documentação Adicional
+
+- **README completo**: `plugins/gemini-orchestrator/README.md`
+- **Agent definition**: `/agents/gemini-orchestrator.md` (815 linhas, na raiz do repositório)
+- **Skill**: `plugins/gemini-orchestrator/skills/gemini-delegate/SKILL.md`
+- **Changelog**: `plugins/gemini-orchestrator/CHANGELOG.md`
+
+---
+
