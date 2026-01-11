@@ -132,6 +132,35 @@ A skill usa **progressive disclosure** - conteúdo detalhado é carregado sob de
 9. **[`responsibility-matrix.md`](skills/gemini-orchestrator/references/responsibility-matrix.md)**
    Matriz de responsabilidades: Quem faz o quê
 
+10. **[`cli-configuration.md`](skills/gemini-orchestrator/references/cli-configuration.md)**
+    Configuração do gemini-cli: `--yolo`, `--approval-mode`, MCP, ferramentas
+
+11. **[`delegate-script-workflow.md`](skills/gemini-orchestrator/references/delegate-script-workflow.md)**
+    Workflow simplificado com script `delegate.sh` para execução de prompts
+
+## Scripts de Apoio
+
+### `delegate.sh`
+
+Script helper para executar delegações de forma padronizada:
+
+```bash
+# Auto-detecta modelo e executa
+./plugins/gemini-orchestrator/scripts/delegate.sh prompts/implement-auth.txt
+
+# Ver ajuda
+./plugins/gemini-orchestrator/scripts/delegate.sh -h
+```
+
+**Recursos**:
+- ✅ Lê prompts de arquivos (evita problemas de parsing)
+- ✅ Auto-detecta modelo (Pro vs Flash) baseado em keywords
+- ✅ Salva relatórios automaticamente em `.gemini-orchestration/reports/`
+- ✅ Extrai relatórios estruturados
+- ✅ Histórico organizado de delegações
+
+Consulte `.gemini-orchestration/README.md` para workflow completo.
+
 ## Recursos Adicionais
 
 - **CHANGELOG.md**: Histórico de versões
@@ -139,6 +168,35 @@ A skill usa **progressive disclosure** - conteúdo detalhado é carregado sob de
 - **Marketplace**: `.claude-plugin/marketplace.json`
 
 ## Versão
+
+**v2.2.3** (2026-01-11)
+- 🐛 **BUGFIX CRÍTICO**: Corrigida flag de aprovação automática no delegate.sh
+  - Antes: `--yolo` (sintaxe incorreta, causava erro)
+  - Depois: `--approval-mode yolo` (sintaxe correta)
+  - Script agora funciona corretamente!
+
+**v2.2.2** (2026-01-11)
+- ✅ SKILL.md reescrito para reforçar uso do delegate.sh
+- ✅ Eliminadas ambiguidades sobre método de delegação
+- ✅ Script path e approval mode claramente documentados
+
+**v2.2.1** (2026-01-11)
+- ✅ Clarificação: Agents podem rodar comandos durante dev, mas NÃO fazem validação final
+- ✅ Backlog.md MCP é exclusivamente responsabilidade do Orchestrator
+- ✅ Validação final (build, tests, servers) é do Orchestrator
+
+**v2.2.0** (2026-01-11)
+- ✅ Script `delegate.sh` para execução padronizada
+- ✅ Templates de prompt (Pro e Flash)
+- ✅ Estrutura `.gemini-orchestration/` para organização
+- ✅ Auto-detecção de modelo baseada em keywords
+- ✅ Salvamento automático de relatórios
+
+**v2.1.1** (2026-01-11)
+- ✅ Flag `--yolo` para autonomia completa dos agentes
+- ✅ Checagem estática obrigatória antes de relatórios
+- ✅ Protocolo de erro (3 tentativas) para resiliência
+- ✅ Limitações de operações destrutivas (apenas Orchestrator)
 
 **v2.0.0** (2026-01-11) - Transformado de agent para skill com progressive disclosure
 

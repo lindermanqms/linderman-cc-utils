@@ -1,5 +1,388 @@
 # Changelog - Gemini Orchestrator Plugin
 
+## [2.2.3] - 2026-01-11
+
+### Fixed
+- **Critical bug in delegate.sh**: Corrigida flag de aprovação automática
+  - Antes: `--yolo` (sintaxe incorreta, não existe)
+  - Depois: `--approval-mode yolo` (sintaxe correta do gemini-cli)
+  - Linha afetada: 223 do delegate.sh
+  - Impacto: Script não funcionava, retornava erro "Unknown option: --yolo"
+
+### Changed
+- **SKILL.md**: Atualizada nota sobre approval mode
+  - De: "Script automatically adds --yolo flag"
+  - Para: "Script automatically adds --approval-mode yolo"
+
+### Rationale
+
+**Bug descoberto**: O script delegate.sh usava `--yolo` que não é uma flag válida do gemini-cli.
+
+**Sintaxe correta do gemini-cli**:
+- ❌ `gemini -p "..." --yolo` (não existe)
+- ✅ `gemini -p "..." --approval-mode yolo` (correto)
+
+**Impacto antes da correção**:
+- Todas as delegações via delegate.sh falhavam
+- Erro: "Unknown option: --yolo"
+- Usuários precisavam usar gemini-cli manualmente
+
+**Depois da correção**:
+- Script funciona corretamente
+- Aprovação automática ativada
+- Workflow delegate.sh totalmente funcional
+
+### Compatibility
+
+- **Backward Compatibility**: ⚠️ Breaking fix (script não funcionava antes)
+- **Behavioral Compatibility**: ✅ Agora funciona como documentado
+- **User Impact**: ✅ Positivo - script finalmente funciona
+
+---
+
+## [2.2.2] - 2026-01-11
+
+### Changed
+- **SKILL.md completamente reescrito** para reforçar uso do delegate.sh
+  - Seção "Recommended Workflow: delegate.sh Script" logo no início
+  - Tabela comparativa: manual vs delegate.sh
+  - Regra #1 explícita: "USE delegate.sh script for all delegations"
+  - Exemplos práticos mostram APENAS delegate.sh (não mais `gemini -p "..."`)
+  - Seção "Critical Reminders" destaca delegate.sh como primeira regra
+  - Eliminadas ambiguidades sobre qual método usar
+
+### Improvements
+- **Estrutura mais clara** com hierarquia de regras
+  - Delegation Rules (1-6)
+  - Orchestrator Responsibilities (7-9)
+  - Memory Integration Rules (10-13)
+- **Ênfase visual** em responsabilidades:
+  - "YOU do this, not agent" em instruções
+  - "YOU validate", "YOU manage Backlog"
+- **Workflow step-by-step** extremamente detalhado
+  - 6 passos numerados para delegação simples
+  - 3 fases numeradas para orquestração complexa
+- **Seção "Why Use delegate.sh?"** com tabela comparativa
+  - 7 aspectos comparados
+  - Deixa claro que delegate.sh é superior
+
+### Rationale
+
+**Problema**: SKILL.md anterior tinha ambiguidade sobre método de delegação:
+- Mostrava tanto `gemini -p "..."` quanto delegate.sh
+- Não ficava claro qual era o método recomendado
+- Usuários podiam confundir e usar método manual
+
+**Solução**: Reescrita completa com foco absoluto em delegate.sh:
+- delegate.sh mencionado logo na primeira seção
+- TODOS os exemplos usam delegate.sh
+- Método manual completamente removido dos exemplos
+- Regra #1 explícita: USE delegate.sh
+
+### Impact
+
+**Antes**:
+- Ambiguidade entre métodos
+- Exemplos misturavam abordagens
+- Não ficava claro o workflow recomendado
+
+**Depois**:
+- Zero ambiguidade: delegate.sh é THE way
+- Todos os exemplos consistentes
+- Workflow cristalino em 6 passos
+- Tabela mostra vantagens do delegate.sh
+
+### Files Modified
+- `skills/gemini-orchestrator/SKILL.md` - Reescrita completa (450 linhas)
+
+### Compatibility
+
+- **Backward Compatibility**: ✅ Compatível (apenas documentação)
+- **Behavioral Compatibility**: ✅ Nenhuma mudança funcional
+- **Documentation Clarity**: ✅ Drasticamente melhorada
+
+---
+
+## [2.2.1] - 2026-01-11
+
+### Changed
+- **Clarificação de responsabilidades entre Agents e Orchestrator**
+  - Agents Gemini **PODEM** rodar comandos/servidores durante desenvolvimento
+  - Agents Gemini **NÃO PODEM** fazer validação final (build, tests, servers)
+  - Agents Gemini **NÃO PODEM** usar Backlog.md MCP
+  - **Orchestrator (Sonnet)** é exclusivamente responsável por:
+    - Validação final (compilation, build, tests)
+    - Rodar servidores para validação
+    - Todos os usos de Backlog.md MCP (ler tasks, atualizar, marcar ACs)
+    - Operações de projeto management
+
+### Updated Files
+- **delegation-strategy.md**
+  - Matriz expandida com coluna "Can Use Backlog MCP"
+  - Seção "When to Act Directly" expandida com Backlog.md e builds
+  - Seção "Operation Boundaries" com limitações de validação e MCP
+- **SKILL.md**
+  - Regra 5 expandida: validação final é responsabilidade do Orchestrator
+  - Nova regra 6: Backlog.md MCP é exclusivo do Orchestrator
+  - Nova regra 7: Agents podem rodar durante dev, mas validação é do Orchestrator
+- **TEMPLATE-flash-implementation.txt**
+  - Seção "Development vs Validation" adicionada
+  - Limitações de Backlog.md MCP documentadas
+  - Limitações de validação final documentadas
+
+### Rationale
+
+**Problema**: Agents Gemini não devem fazer validação final nem usar Backlog.md porque:
+1. **Validação final** requer contexto completo da orquestração
+2. **Backlog.md** requer entendimento do workflow e estado do projeto
+3. **Orchestrator** tem visão completa e pode tomar decisões informadas
+
+**Separação clara**:
+- **Durante desenvolvimento** (Agents): npm install, dev server, criar arquivos, etc.
+- **Validação final** (Orchestrator): npm run build, npm test, start app for validation
+- **Project management** (Orchestrator): TODAS as operações do Backlog.md MCP
+
+### Compatibility
+
+- **Backward Compatibility**: ✅ Compatível (clarificação, não mudança funcional)
+- **Behavioral Compatibility**: ✅ Agents continuam podendo rodar comandos durante dev
+- **New Constraint**: ⚠️ Backlog.md MCP agora é explicitamente proibido para agents
+
+---
+
+## [2.2.0] - 2026-01-11
+
+### Added
+- **Script `delegate.sh`** para execução padronizada de delegações
+  - Lê prompts de arquivos (evita problemas de parsing multiline)
+  - Auto-detecta modelo (Pro vs Flash) baseado em keywords
+  - Salva relatórios automaticamente em `.gemini-orchestration/reports/`
+  - Extrai relatórios estruturados usando `extract-report.sh`
+  - Nomenclatura padronizada: `{model}-{timestamp}.md`
+  - Output completo salvo em `*-full.log` para debugging
+- **Estrutura `.gemini-orchestration/`** na raiz do projeto
+  - `prompts/` - Arquivos de prompt (.txt)
+  - `reports/` - Relatórios gerados (.md, .log)
+  - Templates: `TEMPLATE-pro-planning.txt`, `TEMPLATE-flash-implementation.txt`
+  - README.md com workflow completo
+- **`.gitignore`** atualizado para ignorar `.gemini-orchestration/`
+
+### Novos Componentes
+
+**Script**: `scripts/delegate.sh`
+- Opções: `-m|--model` (pro|flash), `-o|--output`, `-f|--format`, `-s|--save-prompt`, `-h|--help`
+- Auto-detection de modelo via keywords no prompt
+- Geração automática de filename com timestamp
+- Tratamento de erros com logs salvos
+- Preview de relatório no terminal
+- Salvamento de full output para debugging
+
+**Templates**:
+- `TEMPLATE-pro-planning.txt` - Template para gemini-3-pro (7 seções)
+- `TEMPLATE-flash-implementation.txt` - Template para gemini-3-flash (6 seções)
+
+**Documentação**:
+- `.gemini-orchestration/README.md` - Guia completo do workflow
+- `references/delegate-script-workflow.md` - Referência técnica
+
+### Changed
+- **SKILL.md** - Adicionada seção sobre `delegate-script-workflow.md`
+- **README.md** - Adicionada seção "Scripts de Apoio"
+
+### Motivo das Mudanças
+
+**Problema resolvido**: Prompts complexos com múltiplas linhas quebravam quando executados diretamente via `gemini -p "..."` no Bash.
+
+**Erro típico**:
+```bash
+gemini -p "
+  # TAREFA: Implementar X
+  ...
+" --model gemini-3-flash-preview
+# (eval):1: parse error near `()'
+```
+
+**Solução**: `delegate.sh` lê prompts de arquivos, evitando problemas de parsing, e padroniza workflow.
+
+### Vantagens do Novo Workflow
+
+| Aspecto | Antes (manual) | Depois (delegate.sh) |
+|---------|----------------|---------------------|
+| Parsing | ❌ Quebra multiline | ✅ Funciona perfeitamente |
+| Salvamento | ❌ Manual | ✅ Automático |
+| Extração report | ❌ Manual | ✅ Automática |
+| Nomenclatura | ❌ Inconsistente | ✅ Padronizada |
+| Histórico | ❌ Difícil rastrear | ✅ Organizado |
+| Reutilização | ❌ Prompts perdidos | ✅ Prompts salvos |
+| Debugging | ❌ Output perdido | ✅ Full log salvo |
+
+### Usage Examples
+
+**Workflow básico**:
+```bash
+# 1. Criar prompt baseado em template
+cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
+   .gemini-orchestration/prompts/task-10.txt
+
+# 2. Editar prompt (preencher contexto, ACs, etc.)
+vim .gemini-orchestration/prompts/task-10.txt
+
+# 3. Executar delegação (auto-detecta modelo)
+./plugins/gemini-orchestrator/scripts/delegate.sh \
+  .gemini-orchestration/prompts/task-10.txt
+
+# 4. Revisar relatório
+cat .gemini-orchestration/reports/flash-2026-01-11-15-30.md
+```
+
+**Delegação complexa (Pro → Flash)**:
+```bash
+# Design (Pro)
+./plugins/gemini-orchestrator/scripts/delegate.sh -m pro \
+  .gemini-orchestration/prompts/design-api.txt
+
+# Implementação (Flash) - usar output do Pro
+./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
+  .gemini-orchestration/prompts/implement-api.txt
+```
+
+**Salvar prompt temporário**:
+```bash
+./plugins/gemini-orchestrator/scripts/delegate.sh -s /tmp/quick-prompt.txt
+```
+
+### Compatibility
+
+- **Backward Compatibility**: ✅ Compatível (adição de scripts)
+- **Behavioral Compatibility**: ✅ Workflow manual continua funcionando
+- **New Workflow**: ✅ Recomendado para todos os novos usos
+
+### Technical Details
+
+**Arquivos criados**: 6
+- 1 script: `scripts/delegate.sh`
+- 2 templates: `TEMPLATE-pro-planning.txt`, `TEMPLATE-flash-implementation.txt`
+- 3 documentações: `.gemini-orchestration/README.md`, `references/delegate-script-workflow.md`, `.gitignore`
+
+**Diretórios criados**: 1
+- `.gemini-orchestration/` (com `prompts/` e `reports/` subdirs)
+
+**Linhas de código**:
+- `delegate.sh`: ~350 linhas
+- Templates: ~200 linhas (combinados)
+- Documentação: ~600 linhas
+- Total: ~1,150 linhas
+
+---
+
+## [2.1.1] - 2026-01-11
+
+### Added
+- **Flag `--yolo`** em todos os templates de prompt para autonomia completa
+  - Agents podem editar/criar arquivos sem confirmação
+  - Agents podem executar comandos Bash sem aprovação
+  - Agents podem usar MCP servers sem prompts
+- **Checagem estática obrigatória** para gemini-3-flash-preview
+  - Antes de entregar relatório, deve rodar: lint, typecheck, clippy, etc.
+  - Nova seção "Static Analysis Results" no relatório do Flash
+- **Protocolo de erro (3 tentativas)** para falhas na checagem estática
+  - Attempt 1: Auto-fix (e.g., `npm run lint -- --fix`)
+  - Attempt 2: Analisar e corrigir erros específicos
+  - Attempt 3: Documentar dificuldades no relatório
+- **Limitações de operações destrutivas** para agents Gemini
+  - Agents NÃO podem deletar arquivos
+  - Agents NÃO podem remover pacotes/dependências
+  - Operações destrutivas são responsabilidade do Orchestrator (Sonnet)
+
+### Novos Componentes
+
+**Reference**: `references/cli-configuration.md`
+- Guia completo de configuração do gemini-cli
+- Flags de aprovação: `--yolo`, `--approval-mode`
+- Allowlists de ferramentas via `--allowed-tools`
+- Configuração de MCP servers com `trust: true`
+- Matriz de capacidades por modelo
+- Boas práticas e troubleshooting
+
+### Changed
+- **references/prompt-templates.md**
+  - Todos os comandos `gemini` agora incluem `--yolo`
+  - Template do Flash adicionou "MANDATORY PRE-REPORT REQUIREMENTS"
+  - Template do Flash adiciona seção "Static Analysis Results"
+  - Template do Flash adiciona lembrete de limitações destrutivas
+- **references/delegation-strategy.md**
+  - Matriz de responsabilidades expandida com coluna "Can Delete"
+  - Seção "Mandatory Protocol: Static Code Analysis" adicionada
+  - Seção "Operation Boundaries" documentando operações proibidas
+  - Seção "Error Handling Protocol" com 3 tentativas
+- **SKILL.md**
+  - Versão: 2.0.0 → 2.1.0
+  - Adicionada referência a `cli-configuration.md`
+  - Exemplo simples atualizado com `--yolo`
+
+### Protocolos Implementados
+
+**Checagem Estática Obrigatória**:
+```bash
+# TypeScript/JavaScript
+npm run lint && npm run typecheck
+
+# Python
+ruff check . && mypy .
+
+# Rust
+cargo clippy && cargo fmt --check
+
+# Go
+go vet ./... && gofmt -l .
+```
+
+**Protocolo de Erro (3 tentativas)**:
+1. Tentar auto-fix
+2. Analisar e corrigir erros específicos
+3. Documentar no relatório se não resolver
+
+**Limitações de Operações**:
+- ❌ Agents Gemini NÃO podem: deletar arquivos, remover pacotes, rollback migrations, drop tables, modificar git history
+- ✅ Orchestrator (Sonnet) PODE: todas as operações acima após análise cuidadosa
+
+### Motivo das Mudanças
+
+1. **Autonomia Completa**: `--yolo` permite operação autônoma sem prompts interativos
+2. **Qualidade de Código**: Checagem estática obrigatória garante código de qualidade
+3. **Resiliência**: Protocolo de 3 tentativas evita falhas catastróficas
+4. **Segurança**: Operações destrutivas requerem aprovação do Orchestrator
+
+### Compatibility
+
+- **Backward Compatibility**: ✅ Compatível (adições de flags e protocolos)
+- **Behavioral Compatibility**: ⚠️ Agents agora mais autônomos (requer confiança)
+- **Prompt Templates**: ✅ Atualizados para incluir `--yolo`
+- **Protocolos**: ✅ Novos protocolos aplicam automaticamente
+
+### Usage Examples
+
+**Comando típico do Flash**:
+```bash
+gemini -p "Implement feature X" --model gemini-3-flash-preview --yolo
+```
+
+**Workflow completo com checagem estática**:
+```bash
+# Flash implementa com autonomia
+gemini -p "Implement auth system" --model gemini-3-flash-preview --yolo
+
+# Flash automaticamente:
+# 1. Escreve código
+# 2. Roda: npm run lint && npm run typecheck
+# 3. Se falhar: auto-fix (attempt 1)
+# 4. Se ainda falhar: analisa e fixa (attempt 2)
+# 5. Se ainda falhar: documenta no report (attempt 3)
+# 6. Entrega relatório com seção "Static Analysis Results"
+```
+
+---
+
 ## [2.1.0] - 2026-01-11
 
 ### Added

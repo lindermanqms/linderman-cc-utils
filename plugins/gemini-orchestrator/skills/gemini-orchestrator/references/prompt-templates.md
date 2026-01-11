@@ -76,8 +76,13 @@ After your analysis, create a structured report using this EXACT format:
 === END REPORT ===
 
 IMPORTANT: The report MUST be the LAST section of your response, immediately before \"=== END REPORT ===\".
-" --model gemini-3-pro-preview
+" --model gemini-3-pro-preview --yolo
 ```
+
+**Note**: The `--yolo` flag enables autonomous operation, allowing the agent to:
+- Adjust file permissions during problem resolution
+- Execute commands without approval prompts
+- Perform analysis tasks without user intervention
 
 ### Example 1: System Design
 
@@ -131,7 +136,7 @@ OUTPUT FORMAT:
 4. Risks & Mitigations
    - Security risks
    - Edge cases
-" --model gemini-3-pro-preview
+" --model gemini-3-pro-preview --yolo
 ```
 
 ### Example 2: Problem Resolution
@@ -187,7 +192,7 @@ OUTPUT FORMAT:
 4. Prevention
    - Validation to add
    - Tests to write
-" --model gemini-3-pro-preview
+" --model gemini-3-pro-preview --yolo
 ```
 
 ## Template for gemini-3-flash-preview (Implementation)
@@ -242,6 +247,30 @@ OUTPUT:
 - [LANGUAGE] best practices
 - Validate all ACs
 
+MANDATORY PRE-REPORT REQUIREMENTS:
+Before creating your final Orchestrator Report, you MUST:
+
+1. **Run Static Code Analysis** (choose appropriate commands):
+   - TypeScript/JavaScript: `npm run lint` and `npm run typecheck`
+   - Python: `ruff check .` and `mypy .`
+   - Rust: `cargo clippy` and `cargo fmt --check`
+   - Go: `go vet ./...` and `gofmt -l .`
+
+2. **Error Retry Protocol (3 attempts)**:
+   - If static analysis fails:
+     * Attempt 1: Auto-fix (e.g., `npm run lint -- --fix`)
+     * Attempt 2: Analyze and fix specific errors
+     * Attempt 3: Document difficulties in report
+
+3. **Test Execution**:
+   - Run project tests: `npm test`, `pytest`, `cargo test`, etc.
+   - Verify all Acceptance Criteria are met
+
+4. **Only Then Create Report**:
+   - After static analysis passes (or documented failures)
+   - After tests pass
+   - Document any remaining issues
+
 CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT
 
 After implementation, create a structured report using this EXACT format:
@@ -262,6 +291,15 @@ After implementation, create a structured report using this EXACT format:
 - [Test type]: [command] → [result]
 - [Test type]: [command] → [result]
 
+## Static Analysis Results
+✅ [PASSED/FAILED]
+
+**Commands Run**:
+- [Static analysis command 1]: [result]
+- [Static analysis command 2]: [result]
+
+[If failed after 3 attempts, document remaining issues and why they couldn't be resolved]
+
 ## Results
 ✓ [Achievement 1]
 ✓ [Achievement 2]
@@ -270,11 +308,23 @@ After implementation, create a structured report using this EXACT format:
 ## Issues Found
 [If any issues were encountered, document here]
 
+**IMPORTANT REMINDER**:
+- You CANNOT delete files or perform destructive operations
+- You CANNOT remove packages or dependencies
+- Mark files for cleanup instead; Orchestrator will handle deletion
+
 === END REPORT ===
 
 IMPORTANT: The report MUST be the LAST section of your response, immediately before \"=== END REPORT ===\".
-" --model gemini-3-flash-preview
+" --model gemini-3-flash-preview --yolo
 ```
+
+**Note**: The `--yolo` flag enables full implementation autonomy:
+- Create, edit, and delete files without confirmation
+- Execute Bash commands and scripts
+- Start/stop development servers
+- Use MCP servers and tools
+- Run tests and validation commands
 
 ### Example 1: New Feature Implementation
 
@@ -338,7 +388,7 @@ Follow project standards:
 - Use async/await
 - Error handling with AppError class
 - Response format: { success, data/error }
-" --model gemini-3-flash-preview
+" --model gemini-3-flash-preview --yolo
 ```
 
 ### Example 2: Bug Fix Implementation
@@ -378,7 +428,7 @@ Modified src/auth/service.ts with:
 3. Warning log for admins
 4. Comments explaining the fix
 5. Maintain existing code style
-" --model gemini-3-flash-preview
+" --model gemini-3-flash-preview --yolo
 ```
 
 ## Template Variations
@@ -410,7 +460,7 @@ OUTPUT:
 2. Concerns - Potential issues
 3. Recommendations - Specific improvements
 4. Priority - Critical vs Nice-to-have
-" --model gemini-3-pro-preview
+" --model gemini-3-pro-preview --yolo
 ```
 
 ### For Refactoring
@@ -437,7 +487,7 @@ REQUIREMENTS:
 
 OUTPUT:
 Refactored code maintaining exact same API but with DI pattern
-" --model gemini-3-flash-preview
+" --model gemini-3-flash-preview --yolo
 ```
 
 ### For Test Generation
@@ -465,7 +515,7 @@ tests/auth/service.test.ts with:
 - Error case tests
 - Edge case tests
 - Clear test descriptions
-" --model gemini-3-flash-preview
+" --model gemini-3-flash-preview --yolo
 ```
 
 ## Context Injection Patterns
@@ -516,7 +566,7 @@ PROJECT CONTEXT (stdin):
 ...
 
 TASK: ...
-" --model gemini-3-flash-preview
+" --model gemini-3-flash-preview --yolo
 ```
 
 ## Output Format Hints
@@ -535,7 +585,7 @@ Return JSON with this structure:
   \"risks\": [\"...\"],
   \"nextSteps\": [\"...\"]
 }
-" --model gemini-3-pro-preview --output-format json
+" --model gemini-3-pro-preview --output-format json --yolo
 ```
 
 Or for code:
@@ -549,5 +599,5 @@ For each file, provide:
 1. File path
 2. Full code (not snippets)
 3. Brief explanation of changes
-" --model gemini-3-flash-preview
+" --model gemini-3-flash-preview --yolo
 ```

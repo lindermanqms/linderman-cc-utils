@@ -1,24 +1,120 @@
 ---
 name: gemini-orchestrator
 description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models.
-version: 2.0.0
+version: 2.2.1
 ---
 
 # Gemini Orchestrator Skill
 
 ## Overview
 
-Enter **Orchestration Mode** to delegate tasks to Gemini AI models through `gemini-cli`. This skill transforms Claude Code into a coordinator that leverages Gemini-3-Pro for reasoning/planning and Gemini-3-Flash for implementation, while maintaining control over final validation and testing.
+Enter **Orchestration Mode** to delegate tasks to Gemini AI models. This skill transforms Claude Code into a coordinator that leverages:
+- **gemini-3-pro-preview** for reasoning, planning, and problem analysis
+- **gemini-3-flash-preview** for code implementation
+- **Orchestrator (Sonnet)** for final validation and project management
+
+**Recommended workflow**: Use `delegate.sh` script for reliable, organized delegations.
 
 ## Core Principle
 
 **"You are the conductor of a symphony of AI models. Coordinate, don't code."**
 
 When this skill is active:
-- **NEVER write code directly** - always delegate to the appropriate Gemini model
-- **ALWAYS provide comprehensive context** - documentation, files, URLs, memory
-- **EXECUTE final validation** - run tests and verify results as Sonnet
-- **INTEGRATE with Basic Memory** - auto-fetch knowledge before, auto-save insights after
+- **NEVER write code directly** - delegate to the appropriate Gemini model via `delegate.sh`
+- **ALWAYS use template-based prompts** - create prompts from templates in `.gemini-orchestration/prompts/`
+- **ALWAYS provide comprehensive context** - documentation, files, memory, URLs
+- **EXECUTE final validation yourself** - build, test, validate as Orchestrator (Sonnet)
+- **MANAGE project state yourself** - ALL Backlog.md MCP operations stay with you
+
+## Recommended Workflow: delegate.sh Script
+
+**ALWAYS prefer this workflow** over manual `gemini` commands:
+
+### Script Location
+
+The delegate.sh script is located at (relative to project root):
+```
+plugins/gemini-orchestrator/scripts/delegate.sh
+```
+
+**IMPORTANT**: Always use this exact path from the project root. Do NOT search for the script.
+
+### Setup (One-Time)
+
+```bash
+# Verify script exists
+ls -la plugins/gemini-orchestrator/scripts/delegate.sh
+
+# Verify orchestration directory exists
+ls -la .gemini-orchestration/
+```
+
+### Standard Delegation Process
+
+**Step 1: Create prompt from template**
+```bash
+# For implementation (Flash)
+cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
+   .gemini-orchestration/prompts/task-ID-description.txt
+
+# For planning (Pro)
+cp .gemini-orchestration/prompts/TEMPLATE-pro-planning.txt \
+   .gemini-orchestration/prompts/task-ID-design.txt
+```
+
+**Step 2: Edit prompt** - Fill in all sections:
+- Project Context (CLAUDE.md, architecture)
+- Memory Context (patterns from search_nodes)
+- Task Description (detailed requirements)
+- Acceptance Criteria (from Backlog.md if using spec-workflow)
+- Technical Requirements
+
+**Step 3: Execute delegation**
+```bash
+# Auto-detects model based on keywords
+# NOTE: Script automatically adds --approval-mode yolo, do NOT add it manually
+./plugins/gemini-orchestrator/scripts/delegate.sh \
+  .gemini-orchestration/prompts/task-ID-description.txt
+
+# Force specific model if needed
+./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
+  .gemini-orchestration/prompts/task-ID-description.txt
+```
+
+**Step 4: Review report**
+```bash
+# Report saved automatically
+cat .gemini-orchestration/reports/flash-YYYY-MM-DD-HH-MM.md
+```
+
+**Step 5: Validate (as Orchestrator)**
+```bash
+# YOU run these (NOT the agent)
+npm run build
+npm test
+npm start  # For end-to-end validation
+```
+
+**Step 6: Update Backlog (if using spec-workflow)**
+```javascript
+// YOU do this (NOT the agent)
+await backlog_task_update({
+  id: "task-ID",
+  notes: "Implementation completed via Gemini Flash. Report: .gemini-orchestration/reports/flash-*.md"
+})
+```
+
+### Why Use delegate.sh?
+
+| Aspect | Manual `gemini -p "..."` | **delegate.sh (Recommended)** |
+|--------|-------------------------|-------------------------------|
+| Multiline prompts | ❌ Breaks with parse errors | ✅ Reads from file reliably |
+| Report extraction | ❌ Manual | ✅ Automatic |
+| Report storage | ❌ Manual redirection | ✅ Auto-saved with timestamp |
+| Prompt reusability | ❌ Lost after execution | ✅ Saved in prompts/ |
+| Model detection | ❌ Manual specification | ✅ Auto-detects via keywords |
+| Debugging | ❌ Output lost | ✅ Full log saved |
+| Organization | ❌ Inconsistent | ✅ Standardized structure |
 
 ## Knowledge Domains
 
@@ -29,7 +125,7 @@ Complete guide on:
 - When to use gemini-3-pro-preview (Planning, Architecture, Problem Resolution)
 - When to use gemini-3-flash-preview (Coding, Implementation)
 - When to use Explore agent (Codebase analysis)
-- When to act directly as Sonnet (Final validation, tests)
+- When YOU act directly as Sonnet (Final validation, Backlog.md, tests)
 - Decision matrix and use cases
 
 ### 2. Context Provision (`context-provision.md`)
@@ -37,7 +133,7 @@ Complete guide on:
 
 Comprehensive techniques for:
 - 5 types of context (Project Documentation, URLs, Code, Patterns, ACs)
-- How to pass context via stdin, variables, prompts
+- How to pass context via files, variables, prompts
 - Best practices for context construction
 - Common pitfalls to avoid
 
@@ -64,7 +160,7 @@ Ready-to-use templates for:
 **When to consult**: User needs to orchestrate multi-step or complex workflows
 
 Three core patterns:
-- Simple Delegation (7 steps for single tasks)
+- Simple Delegation (single task via delegate.sh)
 - Complex Orchestration (multi-phase with Explore + Pro + Flash)
 - Error Resolution (memory-aware debugging workflow)
 - Complete examples with code
@@ -82,9 +178,9 @@ Strategies for:
 **When to consult**: User is using spec-workflow plugin and needs integration
 
 How to:
-- Read Acceptance Criteria from Backlog.md
+- Read Acceptance Criteria from Backlog.md (YOU do this, not agents)
 - Use ACs as requirements in delegations
-- Update task notes with progress
+- Update task notes with progress (YOU do this, not agents)
 - Trigger `/spec-review` after completion
 
 ### 8. Troubleshooting (`troubleshooting.md`)
@@ -105,148 +201,204 @@ Complete table of:
 - Examples for each type of task
 - Capabilities and limitations per model
 
+### 10. CLI Configuration (`cli-configuration.md`)
+**When to consult**: User needs to configure gemini-cli for autonomous operation
+
+Complete guide on:
+- `--yolo` flag for full autonomy
+- `--approval-mode` options (yolo, auto_edit, default)
+- Tool allowlists via `--allowed-tools` or settings.json
+- MCP server configuration with `trust: true`
+- Static analysis requirements
+- Error retry protocol (3 attempts)
+- Operation boundaries (no destructive operations by agents)
+
+### 11. Delegate Script Workflow (`delegate-script-workflow.md`)
+**When to consult**: User wants complete guide on delegate.sh script
+
+**CRITICAL**: This is the **primary recommended workflow**. Consult for:
+- Complete delegate.sh usage guide
+- Template-based prompt creation
+- Auto-detection of model (Pro vs Flash)
+- Automatic report extraction and saving
+- `.gemini-orchestration/` directory structure
+- Integration with spec-workflow and memory
+- Troubleshooting delegation errors
+- Examples and best practices
+
+### 12. Agents vs Orchestrator (`agents-vs-orchestrator.md`)
+**When to consult**: User needs clarity on separation of responsibilities
+
+Complete guide on:
+- What agents CAN do (during development)
+- What agents CANNOT do (validation, Backlog.md, destructive ops)
+- What YOU MUST do (validation, Backlog.md, final decisions)
+- During development vs final validation
+- Visual workflows and examples
+- Troubleshooting common mistakes
+
 ## Basic Rules
 
-When in Orchestration Mode, follow these essential rules:
+When in Orchestration Mode, follow these rules **without exception**:
 
-1. **NEVER use Edit/Write tools** for code implementation - delegate to gemini-3-flash-preview
-2. **ALWAYS delegate coding** → `gemini-3-flash-preview`
-3. **ALWAYS delegate reasoning/planning** → `gemini-3-pro-preview` (specify "PLANNING task")
-4. **ALWAYS provide EXPLICIT CONTEXT** to Gemini agents (docs, URLs, files, memory)
-5. **ALWAYS execute final tests** as Sonnet - validation is your responsibility
+### Delegation Rules
 
-Additional rules:
-- Extract project slug at start: `basename $(git rev-parse --show-toplevel)`
-- Fetch from Basic Memory before EVERY delegation
-- Save important insights to memory after delegations (ADRs, patterns, errors)
-- Use project slug as prefix for all memory entities
-- Report progress to user throughout orchestration
+1. **USE delegate.sh script** for all delegations (recommended workflow)
+   ```bash
+   ./plugins/gemini-orchestrator/scripts/delegate.sh prompts/task-ID.txt
+   ```
 
-## Final Reports
+2. **NEVER use Edit/Write tools** for code implementation - delegate to agents
 
-All delegations MUST include a structured final report that explains what was done.
+3. **ALWAYS create prompts from templates** in `.gemini-orchestration/prompts/`
 
-### Report Format
+4. **ALWAYS delegate coding** → `gemini-3-flash-preview` (via delegate.sh)
 
-Every delegation to Gemini models MUST end with an Orchestrator Report delimited by:
+5. **ALWAYS delegate reasoning/planning** → `gemini-3-pro-preview` (specify "PLANNING task")
 
-```
-=== ORCHESTRATOR REPORT ===
+6. **ALWAYS provide EXPLICIT CONTEXT** to agents via prompt files:
+   - Project documentation (CLAUDE.md)
+   - Memory patterns (search_nodes results)
+   - Existing code (relevant files)
+   - Technical references (URLs)
 
-[Report content]
+### Orchestrator Responsibilities (YOU, not agents)
 
-=== END REPORT ===
-```
+7. **ALWAYS execute final validation** yourself:
+   - Final compilation/build (`npm run build`, `cargo build --release`)
+   - Final test execution (`npm test`, `pytest`)
+   - Running servers for validation (start app, verify endpoints)
+   - End-to-end testing (complete workflows)
 
-### Report Content by Model Type
+8. **NEVER let agents use Backlog.md MCP** - this is YOUR exclusive job:
+   - Reading tasks: `backlog_task_get()`
+   - Updating notes: `backlog_task_update()`
+   - Listing tasks: `backlog_task_list()`
+   - Marking ACs as completed
+   - Updating task status
 
-**gemini-3-pro (Planning/Analysis)** - 7 required sections:
-1. **Analysis**: Detailed analysis of the problem/domain
-2. **Decisions**: Decisions made with rationale
-3. **Trade-offs**: Trade-offs analyzed with pros and cons
-4. **Alternatives Considered**: Alternatives evaluated and why rejected
-5. **Risks & Mitigations**: Risks identified and mitigation strategies
-6. **Recommendations**: Specific recommendations
-7. **Next Steps**: Suggested next steps for implementation
+9. **Agents can run commands DURING development** - but YOU do final validation:
+   - Agents CAN: `npm install`, `npm run dev`, `npm run lint`
+   - Agents CANNOT: `npm run build` (final), `npm test` (final), use Backlog.md MCP
+   - YOU do final builds and tests after delegation completes
 
-**gemini-3-flash (Implementation)** - 6 required sections:
-1. **Implementation Summary**: Concise summary of what was implemented
-2. **Files Modified**: List of files created/modified
-3. **Changes Made**: Description of changes to each file/component
-4. **Testing Performed**: Tests executed and results
-5. **Results**: Achievements (ACs met, tests passing, etc.)
-6. **Issues Found**: Any problems encountered (if applicable)
+### Memory Integration Rules
 
-### Extracting Reports
+10. **Extract project slug at start:**
+    ```bash
+    PROJECT_SLUG=$(basename $(git rev-parse --show-toplevel))
+    ```
 
-Use the provided script to extract reports from gemini-cli output:
+11. **Fetch from Basic Memory before EVERY delegation:**
+    ```javascript
+    search_nodes({ query: "${PROJECT_SLUG} ${domain} patterns" })
+    ```
 
-```bash
-# Extract from stdout
-gemini -p "..." --model gemini-3-pro-preview | ./plugins/gemini-orchestrator/scripts/extract-report.sh
+12. **Save insights after important delegations:**
+    - ADRs: Architecture decisions from Pro
+    - Patterns: Code patterns discovered by Flash
+    - Errors: Resolutions after Error Resolution workflow
 
-# Save to file
-gemini -p "..." --model gemini-3-flash-preview | ./scripts/extract-report.sh -o report.md
+13. **Use project slug as prefix** for all memory entities:
+    ```
+    ${PROJECT_SLUG}/task-ID/pattern-jwt-auth
+    ${PROJECT_SLUG}/global/decision-api-design
+    ```
 
-# Format as markdown
-gemini -p "..." | ./scripts/extract-report.sh -f markdown > report.md
+## Quick Start Examples
 
-# JSON output
-gemini -p "..." | ./scripts/extract-report.sh -f json
-```
-
-See `scripts/extract-report.sh` for usage and options:
-- `-o FILE`: Save report to file
-- `-f FORMAT`: plain (default), markdown, or json
-- `-h`: Show help
-
-**Critical**: Reports MUST be the LAST section of Gemini's response, immediately before `=== END REPORT ===`.
-
-## Quick Start
-
-### Simple Delegation Example
+### Example 1: Simple Implementation Task
 
 ```bash
-# User request
-User: "Delegate to gemini: implement JWT authentication"
+# 1. Extract project slug
+PROJECT_SLUG=$(basename $(git rev-parse --show-toplevel))
+# Output: linderman-cc-utils
 
-# Orchestration workflow
-1. Extract project slug: linderman-cc-utils
-2. Fetch from memory: search "linderman-cc-utils auth patterns jwt"
-3. Collect context: Read CLAUDE.md, specs, existing code
-4. Determine model: gemini-3-flash-preview (implementation)
-5. Execute delegation:
+# 2. Fetch from memory (YOU do this)
+search_nodes({ query: "linderman-cc-utils auth patterns" })
+# Results: pattern-jwt-storage, pattern-chrome-extension-auth
 
-   cat CLAUDE.md | gemini -p "
-   MEMORY CONTEXT:
-   ${MEMORY_KNOWLEDGE}
+# 3. Create prompt from template
+cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
+   .gemini-orchestration/prompts/task-10-jwt-auth.txt
 
-   PROJECT CONTEXT:
-   (stdin: CLAUDE.md)
+# 4. Edit prompt - fill in:
+#    - Memory Context (paste patterns from step 2)
+#    - Project Context (CLAUDE.md relevant sections)
+#    - Acceptance Criteria (from Backlog.md if using spec-workflow)
+#    - Task description
 
-   TECHNICAL REFERENCES:
-   - https://jwt.io/introduction
+# 5. Execute delegation via script
+./plugins/gemini-orchestrator/scripts/delegate.sh \
+  .gemini-orchestration/prompts/task-10-jwt-auth.txt
 
-   TASK: Implement JWT authentication with refresh tokens
+# Script outputs:
+# ℹ Auto-detected model: gemini-3-flash-preview
+# ✓ Delegation completed successfully
+# ✓ Report extracted to: .gemini-orchestration/reports/flash-2026-01-11-15-30.md
 
-   OUTPUT: Complete, functional code with error handling
-   " --model gemini-3-flash-preview
+# 6. Review report
+cat .gemini-orchestration/reports/flash-2026-01-11-15-30.md
 
-6. Save to memory: pattern-jwt-localStorage
-7. Validate: npm test
-8. Report results to user
+# 7. Validate (YOU do this, not agent)
+npm run build
+npm test
+
+# 8. Update Backlog (YOU do this, not agent)
+await backlog_task_update({
+  id: "task-10",
+  notes: "JWT auth implemented. Report: .gemini-orchestration/reports/flash-2026-01-11-15-30.md"
+})
 ```
 
-### Complex Orchestration Example
+### Example 2: Complex Multi-Phase Orchestration
 
 ```bash
-# User request
-User: "Let gemini design and implement the API layer"
+# PHASE 1: Design (gemini-3-pro)
+# 1. Create design prompt
+cp .gemini-orchestration/prompts/TEMPLATE-pro-planning.txt \
+   .gemini-orchestration/prompts/task-15-api-design.txt
 
-# Multi-phase orchestration
-PHASE 1 - DESIGN (gemini-3-pro-preview):
-→ Fetch memory: "linderman-cc-utils api patterns"
-→ Invoke Explore: "Find existing API patterns"
-→ Delegate to Pro: Design architecture
-→ Save ADR: decision-api-design
+# 2. Fill prompt with context
 
-PHASE 2 - IMPLEMENTATION (gemini-3-flash-preview):
-→ Pass design from Phase 1
-→ Fetch patterns: "linderman-cc-utils implementation patterns"
-→ Delegate to Flash: Implement based on design
-→ Save pattern: pattern-api-structure
+# 3. Execute design phase
+./plugins/gemini-orchestrator/scripts/delegate.sh -m pro \
+  .gemini-orchestration/prompts/task-15-api-design.txt
 
-FINAL - VALIDATION (Sonnet):
-→ Run integration tests
-→ Verify all endpoints work
-→ Report complete results
+# 4. Review design report
+cat .gemini-orchestration/reports/pro-2026-01-11-14-00.md
+
+# PHASE 2: Implementation (gemini-3-flash)
+# 5. Create implementation prompt
+cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
+   .gemini-orchestration/prompts/task-15-api-impl.txt
+
+# 6. Add design from Phase 1 to "DESIGN CONTEXT" section
+# (paste content from pro-*.md report)
+
+# 7. Execute implementation
+./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
+  .gemini-orchestration/prompts/task-15-api-impl.txt
+
+# PHASE 3: Validation (YOU as Orchestrator)
+npm run build
+npm test
+npm start &
+curl http://localhost:3000/api/health
+
+# Save to memory
+create_entities([{
+  name: "linderman-cc-utils/task-15/decision-api-architecture",
+  entityType: "decision",
+  observations: ["RESTful API with JWT auth, see pro-*.md"]
+}])
 ```
 
 ## Prerequisites
 
 Before using this skill, ensure:
 
-1. **gemini-cli installed globally:**
+1. **gemini-cli installed:**
    ```bash
    npm install -g gemini-cli
    gemini --version
@@ -258,17 +410,23 @@ Before using this skill, ensure:
    # Add to ~/.bashrc or ~/.zshrc for persistence
    ```
 
-3. **Basic Memory MCP active** (optional but recommended):
-   - Enables auto-fetch of patterns/decisions before delegations
-   - Enables auto-save of insights after delegations
-   - Requires Basic Memory MCP server configured
+3. **Orchestration directory initialized:**
+   ```bash
+   # Should exist with templates
+   ls .gemini-orchestration/prompts/TEMPLATE-*.txt
+   ```
+
+4. **Basic Memory MCP active** (optional but strongly recommended):
+   - Enables auto-fetch of patterns/decisions
+   - Enables auto-save of insights
+   - Check: `search_nodes({ query: "test" })`
 
 ## When to Use This Skill
 
 Invoke Orchestration Mode when:
 - User explicitly requests delegation to Gemini models
-- Task requires sophisticated reasoning beyond standard coding
-- Need to separate planning (Pro) from implementation (Flash)
+- Task requires sophisticated reasoning (Pro) or implementation (Flash)
+- Need to separate planning from implementation
 - Working with complex multi-step workflows
 - Want to leverage Basic Memory for knowledge persistence
 
@@ -280,11 +438,22 @@ Invoke Orchestration Mode when:
 - "use gemini-cli"
 - "have gemini-3-pro/flash do this"
 
+## Critical Reminders
+
+1. ✅ **ALWAYS use delegate.sh** - don't execute `gemini -p "..."` manually
+2. ✅ **YOU validate** - agents implement, YOU run final build/test/validation
+3. ✅ **YOU manage Backlog** - agents NEVER touch Backlog.md MCP
+4. ✅ **Prompts in files** - create from templates, save in `.gemini-orchestration/prompts/`
+5. ✅ **Reports auto-saved** - check `.gemini-orchestration/reports/` after delegations
+6. ✅ **Memory integration** - fetch before, save after delegations
+
 ## Version History
 
+- **v2.2.1** (2026-01-11): Clarified responsibilities (validation, Backlog.md = Orchestrator)
+- **v2.2.0** (2026-01-11): Added delegate.sh script and .gemini-orchestration/ structure
+- **v2.1.1** (2026-01-11): Added --yolo, static analysis, error protocol
 - **v2.0.0** (2026-01-11): Transformed from agent to skill with progressive disclosure
-- **v1.0.0** (2026-01-11): Initial release as agent
 
 ---
 
-**Remember:** In Orchestration Mode, you coordinate AI models - you don't write code directly. Delegate to the right model, provide comprehensive context, and validate the results.
+**Remember:** You are the Orchestrator. Use `delegate.sh` to coordinate agents, provide rich context, let them develop during implementation, but YOU validate, YOU manage Backlog.md, and YOU make final decisions.
