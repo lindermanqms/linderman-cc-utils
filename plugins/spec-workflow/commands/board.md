@@ -1,7 +1,7 @@
 ---
 name: spec-board
-description: Exibe quadro Kanban interativo do backlog no terminal, mostrando tasks organizadas por status (To Do, In Progress, In Review, Done, Blocked)
-version: 1.0.0
+description: Exibe um resumo formatado do backlog, organizando tarefas por status e apresentando estatísticas detalhadas do projeto.
+version: 2.0.0
 category: workflow
 triggers:
   - "/spec-board"
@@ -11,378 +11,117 @@ triggers:
   - "board"
 ---
 
-# Spec-Board: Visualização Kanban do Backlog
+# Spec-Board: Resumo do Backlog e Estatísticas
 
-Este comando exibe o quadro Kanban interativo do backlog no terminal, permitindo visualizar todas as tasks organizadas por status e filtrar por labels, milestones, prioridades e assignees.
+Este comando gera uma visualização estruturada do backlog, utilizando ferramentas CLI não-interativas para extrair dados do `Backlog.md`. Ele organiza as tarefas por status e fornece métricas quantitativas do projeto.
 
-## Workflow de Visualização
+## Workflow de Execução
 
-### Passo 1: Executar Comando CLI do Backlog
+### Passo 1: Obter Estatísticas Gerais
 
-**Comando básico (sem filtros):**
-
-```bash
-backlog board
-```
-
-**Com filtros:**
+O primeiro passo é obter a visão geral do projeto para extrair métricas de progresso.
 
 ```bash
-# Filtrar por milestone
-backlog board --milestone "v1.0 - MVP"
-
-# Filtrar por label
-backlog board --label backend
-
-# Filtrar por assignee
-backlog board --assignee "@Claude"
-
-# Filtrar por prioridade
-backlog board --priority high
-
-# Combinar filtros
-backlog board --milestone "v1.0 - MVP" --priority high --label backend
+backlog overview
 ```
 
-### Passo 2: Capturar e Processar Output
+### Passo 2: Listar Tarefas por Status
 
-**O comando `backlog board` retorna um quadro Kanban interativo no terminal:**
+Para construir o "board" formatado, as tarefas devem ser listadas em modo texto plano. O comando suporta filtros para refinar o resultado.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          BACKLOG KANBAN BOARD                                │
-│                       Project: linderman-cc-utils                            │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-┌──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
-│   TO DO (3)  │ IN PROGRESS  │  IN REVIEW   │    DONE (5)  │  BLOCKED (1) │
-│              │     (2)      │     (1)      │              │              │
-├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
-│              │              │              │              │              │
-│ task-10      │ task-5       │ task-3       │ task-1       │ task-7       │
-│ Sistema de   │ Integração   │ Refatoração  │ Setup inicial│ Migração DB  │
-│ Autenticação │ com Redis    │ de Auth      │              │              │
-│ [HIGH]       │ [HIGH]       │ [MEDIUM]     │ [CRITICAL]   │ [MEDIUM]     │
-│ @Claude      │ @Claude      │ @Claude      │ @Claude      │ @Claude      │
-│ v1.0-MVP     │ v1.0-MVP     │ v1.0-MVP     │ v1.0-MVP     │ v2.0         │
-│              │              │              │              │ ⚠️ Blocked   │
-│              │              │              │              │              │
-│ task-11      │ task-6       │              │ task-2       │              │
-│ Configurar   │ Implementar  │              │ Criar docs   │              │
-│ CI/CD        │ Rate Limit   │              │              │              │
-│ [MEDIUM]     │ [HIGH]       │              │ [LOW]        │              │
-│ @Claude      │ @Claude      │              │ @Claude      │              │
-│ v1.0-MVP     │ v1.0-MVP     │              │ v1.0-MVP     │              │
-│              │              │              │              │              │
-│ task-12      │              │              │ task-4       │              │
-│ Testes E2E   │              │              │ Config Repo  │              │
-│ [LOW]        │              │              │              │              │
-│ @Claude      │              │              │ @Claude      │              │
-│ v2.0         │              │              │ v1.0-MVP     │              │
-│              │              │              │              │              │
-└──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
-
-Ações disponíveis:
-  ↑/↓/←/→  Navegar entre tasks
-  Enter    Ver detalhes da task
-  m        Mover task para outra coluna
-  f        Filtrar (labels/milestone/assignee/priority)
-  r        Atualizar board
-  q        Sair
-
-Pressione 'h' para ajuda completa
-```
-
-### Passo 3: Apresentar ao Usuário (Formatado)
-
-**Processar o output do CLI e apresentar de forma estruturada:**
-
-```javascript
-// Executar comando via Bash
-const boardOutput = await execCommand("backlog board --format json")
-
-// Processar JSON retornado
-const board = JSON.parse(boardOutput)
-
-// Apresentar ao usuário de forma formatada
-console.log("📊 **Quadro Kanban do Backlog**")
-console.log(`   Projeto: ${board.project}`)
-console.log(`   Última atualização: ${board.lastUpdate}`)
-console.log("")
-
-// Para cada coluna do board
-for (const status of ["To Do", "In Progress", "In Review", "Done", "Blocked"]) {
-  const tasks = board.tasks.filter(t => t.status === status)
-
-  console.log(`\n### ${status.toUpperCase()} (${tasks.length} tasks)`)
-  console.log("")
-
-  if (tasks.length === 0) {
-    console.log("   _Nenhuma task_")
-    continue
-  }
-
-  tasks.forEach(task => {
-    const priorityEmoji = {
-      critical: "🔴",
-      high: "🟠",
-      medium: "🟡",
-      low: "🟢"
-    }[task.priority]
-
-    console.log(`   ${priorityEmoji} **${task.id}**: ${task.title}`)
-    console.log(`      Prioridade: ${task.priority.toUpperCase()}`)
-    console.log(`      Assignee: ${task.assignee}`)
-    if (task.milestone) {
-      console.log(`      Milestone: ${task.milestone}`)
-    }
-    if (task.labels.length > 0) {
-      console.log(`      Labels: ${task.labels.join(", ")}`)
-    }
-    if (task.dependencies && task.dependencies.length > 0) {
-      console.log(`      Dependências: ${task.dependencies.join(", ")}`)
-    }
-    if (task.status === "Blocked") {
-      console.log(`      ⚠️ **BLOQUEADA**`)
-    }
-    console.log("")
-  })
-}
-```
-
-### Passo 4: Estatísticas e Insights (Opcional)
-
-**Adicionar análise quantitativa:**
-
-```javascript
-// Calcular estatísticas
-const stats = {
-  total: board.tasks.length,
-  byStatus: {},
-  byPriority: {},
-  byMilestone: {},
-  blocked: board.tasks.filter(t => t.status === "Blocked").length
-}
-
-board.tasks.forEach(task => {
-  stats.byStatus[task.status] = (stats.byStatus[task.status] || 0) + 1
-  stats.byPriority[task.priority] = (stats.byPriority[task.priority] || 0) + 1
-  if (task.milestone) {
-    stats.byMilestone[task.milestone] = (stats.byMilestone[task.milestone] || 0) + 1
-  }
-})
-
-// Apresentar
-console.log("\n---")
-console.log("\n## 📈 Estatísticas do Backlog")
-console.log("")
-console.log(`**Total de tasks:** ${stats.total}`)
-console.log("")
-console.log("**Por Status:**")
-Object.entries(stats.byStatus).forEach(([status, count]) => {
-  const percentage = ((count / stats.total) * 100).toFixed(1)
-  console.log(`   - ${status}: ${count} tasks (${percentage}%)`)
-})
-console.log("")
-console.log("**Por Prioridade:**")
-Object.entries(stats.byPriority).forEach(([priority, count]) => {
-  console.log(`   - ${priority.toUpperCase()}: ${count} tasks`)
-})
-console.log("")
-if (Object.keys(stats.byMilestone).length > 0) {
-  console.log("**Por Milestone:**")
-  Object.entries(stats.byMilestone).forEach(([milestone, count]) => {
-    console.log(`   - ${milestone}: ${count} tasks`)
-  })
-}
-console.log("")
-if (stats.blocked > 0) {
-  console.log(`⚠️ **Tasks bloqueadas:** ${stats.blocked}`)
-}
-```
-
-## Filtros Disponíveis
-
-### Por Milestone
-
+**Comando básico:**
 ```bash
-/spec-board --milestone "v1.0 - MVP"
+backlog task list --plain
 ```
 
-Mostra apenas tasks do milestone especificado.
-
-### Por Label
-
+**Com filtros (Passados via argumentos):**
 ```bash
-/spec-board --label backend
+# Por Milestone
+backlog task list --plain --milestone "v1.0 - MVP"
+
+# Por Label
+backlog task list --plain --label "bug"
+
+# Por Assignee
+backlog task list --plain --assignee "@Claude"
+
+# Por Prioridade
+backlog task list --plain --priority "high"
 ```
 
-Mostra apenas tasks com o label especificado.
+### Passo 3: Processamento e Formatação do Output
 
-### Por Assignee
+O output do comando `backlog task list --plain` deve ser processado para gerar uma visualização Markdown amigável.
 
-```bash
-/spec-board --assignee "@Claude"
-```
+#### Mapeamento de Prioridades
+- 🔴 **critical**: Erros fatais ou bloqueios imediatos.
+- 🟠 **high**: Funcionalidades críticas ou bugs importantes.
+- 🟡 **medium**: Evoluções planejadas e melhorias.
+- 🟢 **low**: Ajustes menores e débitos técnicos.
 
-Mostra apenas tasks atribuídas ao assignee especificado.
+#### Agrupamento por Status
+As tarefas devem ser agrupadas sob os seguintes cabeçalhos (seguindo a ordem natural do fluxo):
+1. **TO DO**
+2. **IN PROGRESS**
+3. **IN REVIEW**
+4. **DONE**
+5. **BLOCKED** (Sinalizar com ⚠️)
 
-### Por Prioridade
+## Exemplo de Saída Formatada
 
-```bash
-/spec-board --priority high
-```
-
-Mostra apenas tasks com a prioridade especificada (critical, high, medium, low).
-
-### Combinação de Filtros
-
-```bash
-/spec-board --milestone "v1.0 - MVP" --priority high
-```
-
-Combina múltiplos filtros para refinar a visualização.
-
-## Saída Esperada Completa
-
-```markdown
-📊 **Quadro Kanban do Backlog**
-   Projeto: linderman-cc-utils
-   Última atualização: 2026-01-09 15:30:00
-
-### TO DO (3 tasks)
-
-   🟠 **task-10**: Sistema de Autenticação JWT
-      Prioridade: HIGH
-      Assignee: @Claude
-      Milestone: v1.0 - MVP
-      Labels: backend, security, api
-
-   🟡 **task-11**: Configurar Pipeline de CI/CD
-      Prioridade: MEDIUM
-      Assignee: @Claude
-      Milestone: v1.0 - MVP
-      Labels: devops, automation
-
-   🟢 **task-12**: Testes E2E
-      Prioridade: LOW
-      Assignee: @Claude
-      Milestone: v2.0
-      Labels: testing
-
-### IN PROGRESS (2 tasks)
-
-   🟠 **task-5**: Integração com Redis para sessões
-      Prioridade: HIGH
-      Assignee: @Claude
-      Milestone: v1.0 - MVP
-      Labels: backend, cache
-      Dependências: task-1
-
-   🟠 **task-6**: Implementar Rate Limiting
-      Prioridade: HIGH
-      Assignee: @Claude
-      Milestone: v1.0 - MVP
-      Labels: backend, security
-
-### IN REVIEW (1 task)
-
-   🟡 **task-3**: Refatoração do Módulo de Autenticação
-      Prioridade: MEDIUM
-      Assignee: @Claude
-      Milestone: v1.0 - MVP
-      Labels: backend, refactor
-
-### DONE (5 tasks)
-
-   🔴 **task-1**: Setup Inicial do Projeto
-      Prioridade: CRITICAL
-      Assignee: @Claude
-      Milestone: v1.0 - MVP
-      Labels: setup
-
-   🟢 **task-2**: Criar Documentação Base
-      Prioridade: LOW
-      Assignee: @Claude
-      Milestone: v1.0 - MVP
-      Labels: documentation
-
-   ... (outras 3 tasks)
-
-### BLOCKED (1 task)
-
-   🟡 **task-7**: Migração de Banco de Dados
-      Prioridade: MEDIUM
-      Assignee: @Claude
-      Milestone: v2.0
-      Labels: backend, database
-      Dependências: task-15
-      ⚠️ **BLOQUEADA**
+📊 **Backlog Board: [Nome do Projeto]**
+_Gerado em: 2026-01-11_
 
 ---
 
-## 📈 Estatísticas do Backlog
-
-**Total de tasks:** 12
-
-**Por Status:**
-   - To Do: 3 tasks (25.0%)
-   - In Progress: 2 tasks (16.7%)
-   - In Review: 1 task (8.3%)
-   - Done: 5 tasks (41.7%)
-   - Blocked: 1 task (8.3%)
-
-**Por Prioridade:**
-   - CRITICAL: 1 task
-   - HIGH: 4 tasks
-   - MEDIUM: 4 tasks
-   - LOW: 3 tasks
-
-**Por Milestone:**
-   - v1.0 - MVP: 10 tasks
-   - v2.0: 2 tasks
-
-⚠️ **Tasks bloqueadas:** 1
+### 📈 Estatísticas do Projeto (via `backlog overview`)
+- **Total de Tasks:** 24
+- **Completas:** 12 (50%)
+- **Em Aberto:** 8 (33%)
+- **Bloqueadas:** 4 (17%)
 
 ---
 
-## 🎯 Próximas Ações Sugeridas
+### 📋 Tarefas Ativas
 
-Com base no quadro atual:
-1. Priorizar task-10 (Sistema de Autenticação) - alta prioridade
-2. Revisar task-3 (Refatoração) - aguardando review
-3. Resolver bloqueio de task-7 (completar task-15 primeiro)
-```
+#### 🏗️ IN PROGRESS (2 tasks)
+- 🟠 **task-45**: Implementar autenticação OAuth2 (@Claude) `backend` `auth`
+- 🟡 **task-47**: Refatorar componentes de UI (@User) `frontend`
 
-## Ações Interativas (CLI Nativo)
+#### 📝 TO DO (3 tasks)
+- 🔴 **task-42**: Corrigir vazamento de memória em produção (@Claude) `bug` `critical`
+- 🟠 **task-48**: Criar testes de integração para API (@Claude) `testing`
+- 🟢 **task-50**: Atualizar README com instruções de deploy `docs`
 
-Quando executado diretamente no terminal (`backlog board`), o usuário pode:
+#### ⚠️ BLOCKED (1 task)
+- 🟡 **task-49**: Integração com API de Terceiros (@Claude) `waiting-api`
+  _Motivo: Aguardando credenciais de sandbox_
 
-- **Navegar**: Usar setas para mover entre tasks
-- **Ver Detalhes**: Pressionar Enter para ver detalhes completos de uma task
-- **Mover Tasks**: Pressionar 'm' para mover task entre colunas (atualiza status)
-- **Filtrar**: Pressionar 'f' para aplicar filtros interativamente
-- **Atualizar**: Pressionar 'r' para recarregar board
-- **Sair**: Pressionar 'q' para sair
+#### ✅ DONE (Últimas 5 tasks)
+- 🟢 **task-40**: Setup do ambiente de testes
+- 🟡 **task-38**: Implementar log de auditoria
+
+---
+
+## Filtros Suportados
+
+O comando `/spec-board` aceita os seguintes argumentos opcionais para filtrar a lista de tarefas:
+
+- `--milestone <nome>`: Filtra tarefas de um milestone específico.
+- `--label <nome>`: Filtra tarefas que possuam a label informada.
+- `--assignee <nome>`: Filtra tarefas atribuídas a um membro específico (ex: @Claude).
+- `--priority <nível>`: Filtra por prioridade (critical, high, medium, low).
 
 ## Quando Usar?
 
-- **Planejamento de Sprint**: Início de ciclo de desenvolvimento
-- **Daily Standup**: Visualizar progresso diário
-- **Revisão Semanal**: Analisar distribuição de tasks
-- **Identificação de Gargalos**: Detectar acúmulo em colunas específicas
-- **Priorização**: Visualizar prioridades e reordenar se necessário
-- **Desbloqueio**: Identificar tasks bloqueadas rapidamente
+- **Daily Standups**: Para visualizar rapidamente o que está em progresso e o que está bloqueado.
+- **Sprint Planning**: Para revisar o que ainda está no "To Do" de um determinado milestone.
+- **Status Report**: Para gerar um resumo rápido do estado do projeto para stakeholders.
+- **Identificação de Gargalos**: Para ver se há muitas tasks acumuladas em "In Review" ou "Blocked".
 
 ## Notas Importantes
 
-- **CLI Obrigatório**: Este comando requer que o CLI `backlog` esteja instalado e acessível
-- **Validação**: Verificar se CLI está instalado antes de executar (via `/spec-init`)
-- **Formato JSON**: Usar flag `--format json` para processar output programaticamente
-- **Atualização em Tempo Real**: O board reflete estado atual do `Backlog.md`
-- **Filtros Múltiplos**: Combinar filtros para análises específicas
-- **Visualização Complementar**: Usar junto com `backlog browser` para interface web
-- **Performance**: Com muitas tasks (>50), considerar filtrar por milestone ou label
-- **Estatísticas**: Análise quantitativa ajuda a identificar distribuição de trabalho
-- **Tasks Bloqueadas**: Sempre revisar tasks bloqueadas para resolver dependências
-- **Integração com Workflow**: Usar após `/spec-plan` para visualizar novas tasks no contexto geral
+- **Não-Interativo**: Este comando foi projetado para ser executado pelo Claude Code, retornando texto que pode ser lido e processado.
+- **Backlog.md como Fonte**: Toda a informação provém do arquivo `Backlog.md` gerenciado pelo MCP.
+- **Sincronização**: Certifique-se de que o backlog está alinhado com o estado atual do código antes de gerar o board (use `/spec-align` se necessário).
+- **Emojis**: O uso de emojis é encorajado para facilitar a leitura rápida da prioridade e status.

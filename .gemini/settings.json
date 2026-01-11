@@ -1,0 +1,44 @@
+{
+  "tools": {
+    "autoAccept": false,
+    "allowed": [
+      "write_file",
+      "read_file",
+      "replace",
+      "run_shell_command",
+      "glob",
+      "grep",
+      "browser_run_code",
+      "web_fetch",
+      "backlog_task_list",
+      "backlog_task_get",
+      "backlog_task_create",
+      "backlog_task_update",
+      "backlog_task_archive",
+      "backlog_doc_create",
+      "backlog_doc_get",
+      "backlog_doc_list",
+      "backlog_doc_update",
+      "backlog_decision_create",
+      "backlog_decision_list",
+      "backlog_decision_get",
+      "search_nodes",
+      "open_nodes",
+      "create_entities",
+      "create_relations",
+      "add_observations"
+    ]
+  },
+  "context": {
+    "fileName": "CLAUDE.md",
+    "includeDirectories": []
+  },
+  "general": {
+    "vimMode": false,
+    "disableAutoUpdate": false
+  },
+  "ui": {
+    "hideTips": false,
+    "hideBanner": false
+  }
+}

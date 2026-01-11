@@ -30,7 +30,7 @@ A Constituição define as regras inegociáveis do projeto, padrões de código,
 ```
 
 ## Ferramentas MCP para Inicialização
-Sempre prefira usar ferramentas MCP como `document_create` para adicionar novos documentos de padrão ou guias à Constituição após a inicialização inicial.
+Sempre prefira usar ferramentas MCP como `backlog_doc_create` para adicionar novos documentos de padrão ou guias à Constituição após a inicialização inicial.
 
 ### 3. Configuração do Agente e Memória
 O arquivo `CLAUDE.md` é atualizado para instruir o agente a:

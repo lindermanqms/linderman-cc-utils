@@ -40,13 +40,15 @@ O workflow é composto por etapas distintas, cada uma suportada por documentos d
 Para qualquer interação com o Backlog, você **DEVE** utilizar o servidor MCP `backlog`. É estritamente proibido editar arquivos Markdown na pasta `backlog/` ou o arquivo `Backlog.md` manualmente para gerenciar tarefas.
 
 As ferramentas disponíveis incluem:
-- `task_create`: Criar novas tarefas.
-- `task_list`: Listar tarefas existentes.
-- `task_view`: Ver detalhes de uma tarefa.
-- `task_edit`: Atualizar metadados de uma tarefa.
-- `task_complete`: Marcar tarefa como concluída.
-- `document_create`: Criar documentos técnicos ou Specs.
-- `document_view`: Ler conteúdo de documentos.
+- `backlog_task_create`: Criar novas tarefas.
+- `backlog_task_list`: Listar tarefas existentes.
+- `backlog_task_get`: Ver detalhes de uma tarefa.
+- `backlog_task_update`: Atualizar metadados de uma tarefa ou marcar como concluída (com `status: "Done"`).
+- `backlog_task_archive`: Arquivar tarefa.
+- `backlog_doc_create`: Criar documentos técnicos ou Specs.
+- `backlog_doc_get`: Ler conteúdo de documentos.
+- `backlog_doc_list`: Listar documentos disponíveis.
+- `backlog_decision_create`: Criar ADRs (Architecture Decision Records).
 
 O servidor MCP é a fonte da verdade e é sincronizado automaticamente com os arquivos Markdown.
 
