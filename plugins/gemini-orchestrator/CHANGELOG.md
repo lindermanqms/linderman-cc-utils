@@ -1,5 +1,73 @@
 # Changelog - Gemini Orchestrator Plugin
 
+## [2.3.1] - 2026-01-11
+
+### Fixed
+- **Templates ausentes**: Criado diretório `templates/` com TEMPLATE-*.txt
+  - **Problema**: Erro ao tentar copiar templates (arquivo não encontrado)
+  - **Causa**: Templates estavam apenas em `.gemini-orchestration/` (gitignored), não no plugin
+  - **Solução**: Criado `plugins/gemini-orchestrator/templates/` com templates versionados
+
+### Added
+- **plugins/gemini-orchestrator/templates/** (novo diretório)
+  - `TEMPLATE-pro-planning.txt` - Template para gemini-3-pro-preview
+  - `TEMPLATE-flash-implementation.txt` - Template para gemini-3-flash-preview
+  - `README.md` - Documentação completa de uso dos templates
+
+### Changed
+- **SKILL.md - Setup (One-Time)**: Atualizada seção de setup
+  - Adicionado passo 2: Criar estrutura `.gemini-orchestration/`
+  - Adicionado passo 3: Copiar templates do plugin para o projeto
+  - Comando: `cp plugins/gemini-orchestrator/templates/TEMPLATE-*.txt .gemini-orchestration/prompts/`
+  - Explicação: Templates ficam no plugin (versionados), são copiados para projeto (uso)
+
+- **description (frontmatter)**: Atualizada para mencionar templates
+  - "Templates are in plugins/gemini-orchestrator/templates/"
+  - "must be copied to .gemini-orchestration/prompts/ during setup"
+
+### Rationale
+
+**Problema reportado**:
+```
+cp plugins/gemini-orchestrator/templates/TEMPLATE-flash-implementation.txt ...
+cp: não foi possível obter estado de 'plugins/gemini-orchestrator/templates/TEMPLATE-flash-implementation.txt': Arquivo ou diretório inexistente
+```
+
+**Raiz do problema**:
+- Templates existiam apenas em `.gemini-orchestration/prompts/` do projeto atual
+- `.gemini-orchestration/` está no `.gitignore` → não é versionado
+- Outros projetos não recebiam os templates quando instalavam o plugin
+
+**Solução aplicada**:
+1. Criado `plugins/gemini-orchestrator/templates/` (versionado com o plugin)
+2. Copiados templates para lá
+3. Documentado processo de setup (copiar do plugin para projeto)
+4. README.md em templates/ explica estrutura e workflow
+
+**Estrutura resultante**:
+```
+plugins/gemini-orchestrator/
+├── templates/              ← NOVO (versionado)
+│   ├── TEMPLATE-pro-planning.txt
+│   ├── TEMPLATE-flash-implementation.txt
+│   └── README.md
+└── scripts/
+    └── delegate.sh
+
+projeto/.gemini-orchestration/  ← Diretório de trabalho (gitignored)
+└── prompts/
+    ├── TEMPLATE-*.txt (copiados do plugin durante setup)
+    └── task-*.txt (prompts de tarefas específicas)
+```
+
+### Compatibility
+
+- **Backward Compatibility**: ✅ Sem breaking changes
+- **Setup Required**: ⚠️ Usuários devem rodar comando de setup para copiar templates
+- **User Impact**: ✅ Positivo - templates agora disponíveis em todos os projetos
+
+---
+
 ## [2.3.0] - 2026-01-11
 
 ### Added

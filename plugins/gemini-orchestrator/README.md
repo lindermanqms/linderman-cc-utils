@@ -169,6 +169,13 @@ Consulte `.gemini-orchestration/README.md` para workflow completo.
 
 ## Versão
 
+**v2.3.1** (2026-01-11)
+- 🐛 **BUGFIX**: Templates ausentes - Erro ao copiar TEMPLATE-*.txt
+  - Criado diretório `templates/` no plugin com templates versionados
+  - Templates agora disponíveis em `plugins/gemini-orchestrator/templates/`
+  - Documentado processo de setup para copiar templates para `.gemini-orchestration/prompts/`
+  - README.md em templates/ explica estrutura completa
+
 **v2.3.0** (2026-01-11)
 - 📚 **CLARIFICAÇÃO IMPORTANTE**: Como scripts funcionam
   - Adicionada seção "How Scripts Work" no SKILL.md

@@ -1,0 +1,72 @@
+# PLANNING TASK - [Título da Tarefa]
+
+IMPORTANT: This is a PLANNING task (NOT implementation).
+
+You are Gemini-3-Pro, expert in system architecture and design.
+
+## PROJECT CONTEXT
+
+**Project Slug**: [extrair via basename $(git rev-parse --show-toplevel)]
+
+**Standards (CLAUDE.md)**:
+[Colar conteúdo relevante do CLAUDE.md]
+
+**Existing Architecture**:
+[Colar descobertas do Explore agent]
+
+## MEMORY CONTEXT
+
+**Patterns**:
+[Resultados de search_nodes({ query: "{slug} patterns" })]
+
+**Decisions**:
+[Resultados de search_nodes({ query: "{slug} decisions" })]
+
+**Domain Knowledge**:
+[Resultados de search_nodes({ query: "{slug} {domain}" })]
+
+## TASK DESCRIPTION
+
+[Descrever a tarefa de planejamento/design em detalhes]
+
+### Requirements
+
+1. [Requisito 1]
+2. [Requisito 2]
+3. [Requisito 3]
+
+### Acceptance Criteria (from Spec)
+
+- [ ] AC 1: [descrição]
+- [ ] AC 2: [descrição]
+- [ ] AC 3: [descrição]
+
+### Constraints
+
+- [Constraint 1]
+- [Constraint 2]
+
+## ANALYSIS REQUIRED
+
+1. [Aspecto a analisar 1]
+2. [Aspecto a analisar 2]
+3. [Aspecto a analisar 3]
+
+## OUTPUT REQUIREMENTS
+
+Provide structured reasoning with:
+
+1. **Analysis** - Análise detalhada do problema/domínio
+2. **Decisions** - Decisões tomadas com justificativa
+3. **Trade-offs** - Trade-offs analisados com prós e contras
+4. **Alternatives Considered** - Alternativas avaliadas e por que foram rejeitadas
+5. **Risks & Mitigations** - Riscos identificados e estratégias de mitigação
+6. **Recommendations** - Recomendações específicas
+7. **Next Steps** - Próximos passos para implementação
+
+---
+
+CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT using the marker:
+=== ORCHESTRATOR REPORT ===
+
+[7 sections as listed above]

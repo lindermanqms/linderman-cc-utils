@@ -1,7 +1,7 @@
 ---
 name: gemini-orchestrator
-description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", "delegate.sh", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models. Scripts are located at plugins/gemini-orchestrator/scripts/ and are executed directly from their installation location (NOT copied to project).
-version: 2.3.0
+description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", "delegate.sh", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models. Scripts are located at plugins/gemini-orchestrator/scripts/ and are executed directly from their installation location (NOT copied to project). Templates are in plugins/gemini-orchestrator/templates/ and must be copied to .gemini-orchestration/prompts/ during setup.
+version: 2.3.1
 ---
 
 # Gemini Orchestrator Skill
@@ -93,12 +93,22 @@ delegate.sh prompt.txt    # ❌ Will fail
 ### Setup (One-Time)
 
 ```bash
-# Verify script exists
+# 1. Verify script exists
 ls -la plugins/gemini-orchestrator/scripts/delegate.sh
 
-# Verify orchestration directory exists
-ls -la .gemini-orchestration/
+# 2. Create orchestration directory structure
+mkdir -p .gemini-orchestration/prompts
+mkdir -p .gemini-orchestration/reports
+
+# 3. Copy templates from plugin to your project
+cp plugins/gemini-orchestrator/templates/TEMPLATE-*.txt \
+   .gemini-orchestration/prompts/
+
+# 4. Verify templates were copied
+ls -la .gemini-orchestration/prompts/TEMPLATE-*.txt
 ```
+
+**Important**: Templates are stored in the plugin at `plugins/gemini-orchestrator/templates/` and must be copied to your project's `.gemini-orchestration/prompts/` directory.
 
 ### Standard Delegation Process
 
