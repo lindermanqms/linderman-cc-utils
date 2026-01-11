@@ -370,31 +370,30 @@ backlog task view task-10    # Ver detalhes da task
 
 ---
 
-## Gemini Orchestrator Plugin (v1.0)
+## Gemini Orchestrator Plugin (v2.0)
 
-Plugin de orquestração para delegar tarefas complexas aos modelos Gemini através do `gemini-cli`, com coleta automática de contexto e integração com Basic Memory.
+Skill de orquestração para delegar tarefas complexas aos modelos Gemini através do `gemini-cli`, com coleta automática de contexto e integração com Basic Memory.
 
 ### Filosofia Core
 
 **Princípio Fundamental:**
 > **"You are the conductor of a symphony of AI models. Coordinate, don't code."**
 
-O orchestrator **NUNCA** escreve código diretamente. Ele sempre delega para o modelo Gemini apropriado.
+Quando ativa, esta skill transforma Claude Code em um orquestrador que **NUNCA** escreve código diretamente, delegando sempre para o modelo Gemini apropriado.
 
 ### Arquitetura
 
-**Componentes:**
-1. **Agent**: `gemini-orchestrator` - Coordenador principal que gerencia delegações
-2. **Skill**: `gemini-delegate` - Skill opcional para facilitar invocação
+**Componente:**
+- **Skill**: `gemini-orchestrator` - Skill com progressive disclosure (SKILL.md + references/)
 
 **Delegation Strategy:**
 - `gemini-3-pro-preview`: Planning, architecture design, problem analysis (SPECIFY "PLANNING task")
 - `gemini-3-flash-preview`: Implementation, coding, bug fixes
-- **Orchestrator (Sonnet)**: Final validation, tests, approval
+- **Claude Code (Orchestrator)**: Final validation, tests, approval
 
 ### Trigger Phrases
 
-O agent é automaticamente invocado quando detecta:
+A skill é automaticamente ativada quando detecta:
 - "delegate to gemini"
 - "use gemini for"
 - "let gemini handle"
@@ -663,10 +662,19 @@ RESULTS:
 
 ### Documentação Adicional
 
-- **README completo**: `plugins/gemini-orchestrator/README.md`
-- **Agent definition**: `/agents/gemini-orchestrator.md` (815 linhas, na raiz do repositório)
-- **Skill**: `plugins/gemini-orchestrator/skills/gemini-delegate/SKILL.md`
-- **Changelog**: `plugins/gemini-orchestrator/CHANGELOG.md`
+- **README completo**: `plugins/gemini-orchestrator/README.md` (overview conciso)
+- **Skill principal**: `plugins/gemini-orchestrator/skills/gemini-orchestrator/SKILL.md`
+- **Referências detalhadas**: `plugins/gemini-orchestrator/skills/gemini-orchestrator/references/*.md`
+  - `delegation-strategy.md` - Quando usar cada modelo
+  - `context-provision.md` - Como fornecer contexto
+  - `memory-integration.md` - Integração com Basic Memory
+  - `prompt-templates.md` - Templates prontos
+  - `workflow-patterns.md` - Padrões de orquestração
+  - `error-resolution.md` - Estratégias de resolução
+  - `spec-workflow-integration.md` - Integração com Backlog.md
+  - `troubleshooting.md` - Solução de problemas
+  - `responsibility-matrix.md` - Matriz de responsabilidades
+- **Changelog**: `plugins/gemini-orchestrator/CHANGELOG.md` (inclui v2.0.0 breaking changes)
 
 ---
 
