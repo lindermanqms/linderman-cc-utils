@@ -1,5 +1,43 @@
 # Changelog - Gemini Orchestrator Plugin
 
+## [2.2.4] - 2026-01-11
+
+### Changed
+- **SKILL.md**: Adicionado reforço MÁXIMO do GOLDEN RULE
+  - Nova seção proeminente no topo: "🚨 GOLDEN RULE - NEVER BREAK THIS 🚨"
+  - Adicionado RULE #0 nas Basic Rules (antes de todas as outras)
+  - Reorganizada seção Critical Reminders para começar com GOLDEN RULE
+  - Lista completa de ações proibidas (NEVER use Edit/Write for code)
+  - Única exceção explícita: quando usuário diz "you write the code" ou "don't delegate"
+
+### Rationale
+
+**Motivação**: Reforçar a regra mais importante do plugin - o Orchestrator NUNCA deve escrever código diretamente.
+
+**Problema anterior**:
+- Regra existia mas não era suficientemente enfatizada
+- Orchestrator poderia confundir quando implementar vs quando delegar
+- Faltava clareza sobre a exceção (somente se usuário pedir explicitamente)
+
+**Solução aplicada**:
+- GOLDEN RULE agora aparece em 3 locais estratégicos do SKILL.md
+- Seção dedicada no início do documento (linhas 22-38)
+- RULE #0 nas Basic Rules (linhas 262-276)
+- Critical Reminders reorganizado para começar com este aviso (linhas 474-493)
+
+**Impacto esperado**:
+- ✅ Orchestrator nunca confunde quando delegar vs implementar
+- ✅ Fluxo padrão sempre usa delegate.sh para codificação
+- ✅ Exceção clara quando usuário quer implementação direta
+
+### Compatibility
+
+- **Backward Compatibility**: ✅ Sem breaking changes (apenas documentação)
+- **Behavioral Compatibility**: ✅ Reforça comportamento desejado existente
+- **User Impact**: ✅ Positivo - comportamento mais previsível e consistente
+
+---
+
 ## [2.2.3] - 2026-01-11
 
 ### Fixed

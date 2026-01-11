@@ -1,7 +1,7 @@
 ---
 name: spec-plan
-description: Inicia o processo de planejamento de uma nova feature ou task macro, criando a Spec e a tarefa correspondente via MCP.
-version: 2.0.0
+description: Inicia o processo de planejamento de uma nova feature ou task macro, criando a Spec, a tarefa principal e suas subtasks correspondentes via MCP.
+version: 2.1.0
 category: workflow
 triggers:
   - "/spec-plan"
@@ -14,9 +14,9 @@ arguments:
     required: false
 ---
 
-# Spec-Plan: Planejamento de Feature com Spec Document
+# Spec-Plan: Planejamento Estruturado (Main Task, Subtasks & Spec)
 
-Este comando guia a criação de uma **Spec completa** utilizando o servidor MCP do Backlog, com TODOS os campos disponíveis (priority, labels, milestones, dependencies, etc.).
+Este comando guia o planejamento completo de uma funcionalidade, dividindo-a em unidades de trabalho atômicas e documentando o detalhamento técnico em uma Spec oficial.
 
 ## Workflow OBRIGATÓRIO
 
@@ -25,112 +25,96 @@ Este comando guia a criação de uma **Spec completa** utilizando o servidor MCP
 **1. Perguntas Chave ao Usuário:**
 
 Se `feature-name` não foi fornecido ou está vago, perguntar:
-- **Objetivo**: O que esta feature deve resolver/entregar?
-- **Usuários**: Quem vai usar? Qual o impacto?
+- **Objetivo**: O que esta feature deve resolver?
 - **Escopo**: O que está incluído/excluído?
 - **Prioridade**: Crítica, Alta, Média ou Baixa?
 - **Milestone**: Faz parte de algum marco (v1.0, v2.0, etc.)?
 - **Dependências**: Depende de outras tasks existentes?
-- **Labels**: Quais categorias (backend, frontend, plugin, etc.)?
 
-**2. Consulta ao MCP:**
+**2. Consulta ao Contexto (MCP & Memory):**
 
 ```javascript
-// Ler Constituição e padrões existentes
-const constituicao = backlog_doc_list({ path: "docs/standards/" })
+// Ler Constituição, padrões e lições aprendidas
+const padroes = backlog_doc_list({ path: "docs/standards/" })
 const decisoes = backlog_decision_list()
-
-// Evitar duplicidade
-const tasksExistentes = backlog_task_list()
+search_nodes({ query: "{{feature-name}} patterns" })
 ```
 
-**3. Consultar Basic Memory:**
+### Fase 2: Criar Tarefa PRINCIPAL (Macro)
+
+A tarefa principal serve como o "guarda-chuva" para o trabalho. Sua descrição deve ser sucinta e apontar para a Spec.
 
 ```javascript
-// Buscar lições aprendidas e ADRs relacionados
-search("termo relacionado à feature")
-build_context() // Para carregar notas relevantes
-```
-
-### Fase 2: Criar Task Macro via MCP (APRIMORADO)
-
-**IMPORTANTE**: Usar **TODOS** os campos disponíveis no Backlog.md MCP:
-
-```javascript
-backlog_task_create({
+// Criar tarefa macro
+const mainTask = backlog_task_create({
   title: "{{feature-name}}",
-  type: "feature",  // ou "enhancement", "bug", "chore"
-  status: "To Do",
-  priority: "{{prioridade definida}}",  // low, medium, high, critical
-  labels: ["{{categorias}}"],  // Ex: ["backend", "api", "authentication"]
-  milestone: "{{marco}}",  // Ex: "v1.0 - MVP" ou null
-  assignee: "@Claude",
-  dependencies: ["{{task-ids}}"],  // Ex: ["task-5", "task-12"] ou []
-  acceptance_criteria: [
-    "[ ] {{AC1 - critério verificável}}",
-    "[ ] {{AC2 - critério verificável}}",
-    "[ ] {{AC3 - critério verificável}}"
-  ],
-  plan: `
-## Plano de Implementação
-
-1. {{Etapa 1 - ex: Análise de requisitos}}
-2. {{Etapa 2 - ex: Design da arquitetura}}
-3. {{Etapa 3 - ex: Implementação core}}
-4. {{Etapa 4 - ex: Testes unitários e integração}}
-5. {{Etapa 5 - ex: Revisão e documentação}}
-  `,
-  notes: `Feature solicitada em {{data}}.
-Contexto: {{contexto adicional se relevante}}`
-})
-```
-
-**Exemplo concreto:**
-
-```javascript
-backlog_task_create({
-  title: "Sistema de Autenticação JWT",
   type: "feature",
   status: "To Do",
-  priority: "high",
-  labels: ["backend", "security", "api"],
-  milestone: "v1.0 - MVP",
+  priority: "{{prioridade}}",
+  labels: ["{{categorias}}"],
+  milestone: "{{marco}}",
   assignee: "@Claude",
-  dependencies: [],
+  dependencies: ["{{task-ids-externas}}"],
   acceptance_criteria: [
-    "[ ] Endpoint /auth/login retorna JWT válido",
-    "[ ] Refresh token implementado e funcional",
-    "[ ] Rate limiting configurado (max 5 tentativas/min)",
-    "[ ] Testes unitários com cobertura > 80%"
+    "[ ] {{AC Macro 1 - ex: Funcionalidade X operando fim-a-fim}}",
+    "[ ] {{AC Macro 2 - ex: Cobertura de testes > 80%}}",
+    "[ ] {{AC Macro 3 - ex: Documentação técnica atualizada}}"
   ],
   plan: `
-## Plano de Implementação
+## Overview da Implementação
 
-1. Implementar endpoint /auth/login com validação de credenciais
-2. Configurar geração de JWT com secret e expiração
-3. Adicionar middleware de autenticação para rotas protegidas
-4. Implementar refresh token logic com Redis
-5. Configurar rate limiting com express-rate-limit
-6. Escrever testes unitários e de integração
-7. Documentar API e atualizar README
+1. {{Resumo Fase 1}}
+2. {{Resumo Fase 2}}
+3. {{Resumo Fase 3}}
   `,
-  notes: "Feature crítica para lançamento MVP. Requer integração com Redis."
+  description: "{{Descrição sucinta de 1-2 linhas}}.\n\n📄 **Spec detalhada:** specs/SPEC-{{ID}}-{{slug}}.backlog"
+})
+// Resultado esperado: task-{{ID}}
+```
+
+### Fase 3: Criar SUBTAREFAS (Passo a Passo)
+
+Dividir a implementação em passos atômicos e independentes (sempre que possível). Cada subtask deve ser vinculada à principal via campo `parent`.
+
+```javascript
+// Criar Subtask 1 (Exemplo)
+backlog_task_create({
+  title: "Subtask 1: {{Ação Atômica}}",
+  type: "feature",
+  status: "To Do",
+  priority: "{{mesma da principal}}",
+  labels: ["{{labels}}"],
+  parent: "task-{{ID}}", // ← VÍNCULO OBRIGATÓRIO
+  acceptance_criteria: [
+    "[ ] {{Critério técnico específico 1}}",
+    "[ ] {{Critério técnico específico 2}}"
+  ],
+  notes: "Referência técnica na seção X da Spec."
+})
+
+// Criar Subtask 2 com Dependência (Exemplo)
+backlog_task_create({
+  title: "Subtask 2: {{Ação que depende da anterior}}",
+  type: "feature",
+  parent: "task-{{ID}}",
+  dependencies: ["task-{{ID}}.1"], // ← DEPENDÊNCIA ENTRE SUBTAREFAS
+  acceptance_criteria: [
+    "[ ] {{Critério técnico específico}}"
+  ]
 })
 ```
 
-**Capturar o ID retornado:** `task-{{ID}}`
+### Fase 4: Criar Spec Document (O "Como")
 
-### Fase 3: Criar Spec Document via MCP (APRIMORADO)
-
-**CRÍTICO**: Usar extensão **`.backlog`** (OBRIGATÓRIA, não aceitar `.md`):
+**CRÍTICO**: Usar extensão **`.backlog`** (OBRIGATÓRIA). A Spec contém o detalhamento técnico completo que não cabe nas tasks.
 
 ```javascript
 backlog_doc_create({
   title: "SPEC-{{ID}}: {{feature-name}}",
   type: "spec",
-  path: "specs/SPEC-{{ID}}-{{slug}}.backlog",  // EXTENSÃO .backlog OBRIGATÓRIA
+  path: "specs/SPEC-{{ID}}-{{slug}}.backlog", // EXTENSÃO .backlog OBRIGATÓRIA
   labels: ["specification"],
-  content: `---
+  content: `--- 
 spec_id: SPEC-{{ID}}
 feature: {{feature-name}}
 related_task: task-{{ID}}
@@ -142,239 +126,66 @@ created_date: {{timestamp}}
 
 # SPEC-{{ID}}: {{feature-name}}
 
-**Status:** 📝 Draft
-**Task Relacionada:** task-{{ID}}
-**Milestone:** {{milestone}}
-**Prioridade:** {{priority}}
+**Status:** 📝 Draft | **Task:** task-{{ID}}
 
-## 1. Contexto e Motivação
+## 1. Contexto e Objetivos
+{{Descrição detalhada do porquê e para quê}}
 
-### Problema
-{{Descrição do problema que esta feature resolve}}
+## 2. Arquitetura e Design
+{{Componentes, fluxos de dados, diagramas textuais}}
 
-### Objetivos
-{{O que queremos alcançar com esta implementação}}
-
-### Stakeholders
-{{Quem se beneficia ou é impactado}}
-
-## 2. Proposta de Solução
-
-### Visão Geral
-{{Descrição high-level da solução}}
-
-### Arquitetura
-{{Diagramas, fluxo de dados, componentes envolvidos}}
-
-### Stack Tecnológica
-{{Tecnologias, bibliotecas, frameworks a serem usados}}
-
-## 3. Requisitos Funcionais
-
-1. {{RF1 - requisito funcional detalhado}}
-2. {{RF2 - requisito funcional detalhado}}
-
-## 4. Requisitos Não-Funcionais
-
-1. **Performance**: {{critérios de desempenho}}
-2. **Segurança**: {{requisitos de segurança}}
-3. **Escalabilidade**: {{requisitos de escala}}
-
-## 5. Critérios de Aceite (AC) - Espelhado da Task
-
-{{Copiar os ACs da task aqui para referência}}
-
-- [ ] {{AC1}}
-- [ ] {{AC2}}
-- [ ] {{AC3}}
-
-## 6. Detalhamento Técnico
-
-### APIs/Endpoints
-{{Endpoints, métodos, payloads}}
+## 3. Detalhamento Técnico
+### APIs / Endpoints
+{{Métodos, rotas, payloads de exemplo}}
 
 ### Modelos de Dados
-{{Schemas, entidades, relacionamentos}}
+{{Entidades, schemas, relacionamentos}}
 
-### Fluxos de Execução
-{{Sequências, state machines, algoritmos}}
+## 4. Acceptance Criteria (Espelhado)
+- [ ] {{AC 1}}
+- [ ] {{AC 2}}
 
-## 7. Casos de Borda e Tratamento de Erros
+## 5. Casos de Borda e Erros
+| Cenário | Resposta Esperada |
+|---------|-------------------|
+| {{Ex}}  | {{Ex}}            |
 
-| Cenário | Comportamento Esperado |
-|---------|------------------------|
-| {{Cenário 1}} | {{Resposta}} |
-| {{Cenário 2}} | {{Resposta}} |
+## 6. Estratégia de Testes
+{{Unitários, integração, E2E}}
 
-## 8. Estratégia de Testes
-
-### Testes Unitários
-{{O que testar isoladamente}}
-
-### Testes de Integração
-{{O que testar em conjunto}}
-
-### Testes E2E (se aplicável)
-{{Fluxos completos a validar}}
-
-## 9. Dependências e Riscos
-
-### Dependências
-{{Tasks dependentes: task-X, task-Y}}
-
-### Riscos Identificados
-1. {{Risco 1 - mitigação}}
-2. {{Risco 2 - mitigação}}
-
-## 10. Plano de Rollout
-
-### Fase 1: {{nome fase}}
-{{Descrição}}
-
-### Fase 2: {{nome fase}}
-{{Descrição}}
-
-## 11. Referências
-
-- Constituição: backlog/docs/doc-001...
-- ADRs relacionadas: {{lista}}
-- Documentação externa: {{links}}
-  `
-})
-```
-
-**Validação de extensão:**
-```javascript
-// REJEITAR se usuário tentar .md:
-if (path.endsWith('.md')) {
-  throw new Error('❌ Extensão .md não permitida para specs! Use .backlog obrigatoriamente.')
-}
-```
-
-### Fase 4: Vincular Spec à Task
-
-**Atualizar task com link para spec:**
-
-```javascript
-backlog_task_update("task-{{ID}}", {
-  description: `Spec detalhada: specs/SPEC-{{ID}}-{{slug}}.backlog
-
-{{Descrição resumida da feature}}`
-})
-```
-
-**Ou adicionar em notes:**
-
-```javascript
-backlog_task_update("task-{{ID}}", {
-  notes: task.notes + `\n\n📄 Spec criada: specs/SPEC-{{ID}}-{{slug}}.backlog`
-})
-```
-
-### Fase 5: Registrar Decisões no Basic Memory (Se aplicável)
-
-**Se houver decisões arquiteturais importantes:**
-
-```javascript
-write_note({
-  title: "[ADR] - {{título da decisão}}",
-  content: `---
-type: ADR
-tags: [architecture, {{feature-name}}]
-project: linderman-cc-utils
----
-# ADR: {{título da decisão}}
-
-## Contexto
-{{contexto da decisão}}
-
-## Decisão
-{{o que foi decidido}}
-
-## Alternativas
-{{outras opções consideradas}}
-
-## Consequências
-{{impactos esperados}}
-
-## Relação
-- Task: task-{{ID}}
+## 7. Referências
+- Constituição: backlog/docs/standards/constituicao.backlog
+- ADRs: {{links}}
 `
 })
 ```
 
-### Saída Esperada
+### Fase 5: Validação e Vínculo Final
 
-```markdown
-✅ Feature Planejada com Sucesso!
+**Atualizar a Tarefa Principal** para garantir que todos os links estão corretos:
 
-📋 **Task Criada**: task-{{ID}}
-   - Título: {{feature-name}}
-   - Tipo: feature
-   - Prioridade: {{priority}}
-   - Labels: {{labels}}
-   - Milestone: {{milestone}}
-   - Dependências: {{dependencies ou "Nenhuma"}}
-   - Status: To Do
-
-📄 **Spec Criada**: specs/SPEC-{{ID}}-{{slug}}.backlog
-   - Versão: 1.0
-   - Status: Draft
-   - Vinculada à task-{{ID}}
-
-🏗️ **Plano de Implementação**: {{X etapas definidas}}
-
-✅ **Acceptance Criteria**: {{N critérios}} definidos
-
-🧠 **Memory MCP**: {{Se aplicável: "ADR registrada"}}
-
-🎯 **Próximos Passos:**
-   1. Revise a Spec: Ler specs/SPEC-{{ID}}-{{slug}}.backlog
-   2. Ajuste se necessário (via backlog_doc_update)
-   3. Quando pronto: /spec-execute task-{{ID}}
-   4. Visualize no Kanban: backlog board
+```javascript
+backlog_task_update("task-{{ID}}", {
+  notes: "📄 Spec oficial: specs/SPEC-{{ID}}-{{slug}}.backlog\n\n🛠️ Esta task é composta por {{N}} subtasks detalhando o passo-a-passo."
+})
 ```
 
-## Template Rápido do Spec (Para Referência)
-
-```markdown
----
-spec_id: SPEC-{{ID}}
-feature: {{nome}}
-related_task: task-{{ID}}
-status: draft
-version: 1.0
 ---
 
-# SPEC-{{ID}}: {{Nome}}
+## Regras de Ouro do Planejamento
 
-## 1. Contexto
-## 2. Solução
-## 3. Requisitos Funcionais
-## 4. Requisitos Não-Funcionais
-## 5. Acceptance Criteria
-## 6. Detalhamento Técnico
-## 7. Casos de Borda
-## 8. Testes
-## 9. Dependências/Riscos
-## 10. Rollout
-## 11. Referências
-```
+1. **Task vs Spec**: A Task diz "O QUE" fazer (trabalho). A Spec diz "COMO" fazer (projeto).
+2. **Atomicidade**: Subtasks devem ser pequenas o suficiente para serem concluídas em poucas horas.
+3. **Link Parent**: SEMPRE preencher o campo `parent` nas subtasks.
+4. **Extensão .backlog**: NUNCA usar `.md` para Specs ou Documentos de padrões. Rejeitar se solicitado.
+5. **IDs Sincronizados**: SPEC-010 deve referenciar a task-010.
+6. **Dependências**: Se o Passo B depende do Passo A, use o campo `dependencies` na subtask B.
 
-## Regras de Ouro
+## Exemplo de Estrutura de Subtasks (Autenticação)
 
-1. **MCP-Only**: PROIBIDO editar arquivos Markdown/Backlog diretamente. Use sempre ferramentas MCP.
-2. **Extensão .backlog Obrigatória**: Specs DEVEM usar `.backlog`, não `.md`. Rejeitar tentativas de usar `.md`.
-3. **Todos os Campos**: Usar TODOS os campos disponíveis no MCP (priority, labels, milestones, dependencies, assignee, plan, notes).
-4. **ACs são Contratos**: Seja exaustivo e verificável nos Critérios de Aceite.
-5. **Consultar Memória**: SEMPRE consultar Memory MCP e Constituição antes de criar spec.
-6. **Dependências Explícitas**: Se a feature depende de outras tasks, declarar via campo `dependencies`.
-7. **Plano Estruturado**: Campo `plan` deve ter etapas numeradas e claras.
-
-## Notas Importantes
-
-- **Idempotência**: Se já existe spec para a feature, avisar usuário antes de duplicar
-- **Validação de Nomes**: Slug deve ser kebab-case (ex: `sistema-autenticacao`)
-- **IDs Sequenciais**: SPEC-ID e task-ID devem corresponder (SPEC-001 ↔ task-001)
-- **Versionamento**: Specs podem evoluir - use campo `version` se houver mudanças significativas
-- **Status da Spec**: Draft → In Review → Approved → Implemented
+- **task-010**: Sistema de Autenticação JWT (Main)
+    - **task-010.1**: Setup de Schemas e Modelos de Usuário
+    - **task-010.2**: Implementação do Serviço de Assinatura JWT
+    - **task-010.3**: Endpoint POST /auth/login
+    - **task-010.4**: Middleware de Validação de Token
+    - **task-010.5**: Testes de Integração e Cobertura

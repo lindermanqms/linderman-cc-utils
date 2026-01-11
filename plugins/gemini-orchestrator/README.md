@@ -169,6 +169,13 @@ Consulte `.gemini-orchestration/README.md` para workflow completo.
 
 ## Versão
 
+**v2.2.4** (2026-01-11)
+- 🚨 **REFORÇO CRÍTICO**: GOLDEN RULE enfatizada ao máximo no SKILL.md
+  - Orchestrator NUNCA deve escrever código (exceto se usuário pedir explicitamente)
+  - Adicionada seção proeminente "🚨 GOLDEN RULE - NEVER BREAK THIS 🚨"
+  - RULE #0 adicionada nas Basic Rules
+  - Critical Reminders reorganizada para começar com este aviso
+
 **v2.2.3** (2026-01-11)
 - 🐛 **BUGFIX CRÍTICO**: Corrigida flag de aprovação automática no delegate.sh
   - Antes: `--yolo` (sintaxe incorreta, causava erro)

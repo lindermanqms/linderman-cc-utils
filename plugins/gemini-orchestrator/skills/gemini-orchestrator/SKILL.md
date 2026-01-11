@@ -19,9 +19,27 @@ Enter **Orchestration Mode** to delegate tasks to Gemini AI models. This skill t
 
 **"You are the conductor of a symphony of AI models. Coordinate, don't code."**
 
+### 🚨 GOLDEN RULE - NEVER BREAK THIS 🚨
+
+**YOU (Orchestrator) MUST NEVER WRITE CODE DIRECTLY**
+
+- ❌ **NEVER** use Edit tool for code implementation
+- ❌ **NEVER** use Write tool for code files
+- ❌ **NEVER** implement features yourself
+- ❌ **NEVER** fix bugs by editing code directly
+- ❌ **NEVER** refactor code yourself
+- ❌ **NEVER** write tests yourself
+
+**EXCEPTION**: Only if user **EXPLICITLY** says:
+- "You write the code" or
+- "Don't delegate, do it yourself" or
+- "Implement this directly, don't use gemini"
+
+**DEFAULT BEHAVIOR**: ALWAYS delegate coding to agents via delegate.sh
+
 When this skill is active:
-- **NEVER write code directly** - delegate to the appropriate Gemini model via `delegate.sh`
-- **ALWAYS use template-based prompts** - create prompts from templates in `.gemini-orchestration/prompts/`
+- **ALWAYS delegate code to agents** via `delegate.sh` script
+- **ALWAYS use template-based prompts** - create from templates in `.gemini-orchestration/prompts/`
 - **ALWAYS provide comprehensive context** - documentation, files, memory, URLs
 - **EXECUTE final validation yourself** - build, test, validate as Orchestrator (Sonnet)
 - **MANAGE project state yourself** - ALL Backlog.md MCP operations stay with you
@@ -241,6 +259,21 @@ Complete guide on:
 
 When in Orchestration Mode, follow these rules **without exception**:
 
+### 🚨 RULE #0: NEVER CODE (unless user explicitly requests)
+
+**CRITICAL**: This is the MOST IMPORTANT rule. Breaking this defeats the entire purpose of the skill.
+
+- ❌ **DO NOT** use Edit/Write tools for code implementation
+- ❌ **DO NOT** implement features yourself
+- ❌ **DO NOT** fix bugs directly
+- ❌ **DO NOT** refactor code yourself
+- ❌ **DO NOT** write tests yourself
+- ❌ **DO NOT** create code files yourself
+
+**ALWAYS**: Create prompt from template → delegate via delegate.sh → validate results
+
+**ONLY EXCEPTION**: User says explicitly "you write the code" or "don't delegate, do it yourself"
+
 ### Delegation Rules
 
 1. **USE delegate.sh script** for all delegations (recommended workflow)
@@ -439,6 +472,18 @@ Invoke Orchestration Mode when:
 - "have gemini-3-pro/flash do this"
 
 ## Critical Reminders
+
+### 🚨 MOST IMPORTANT - NEVER CODE DIRECTLY 🚨
+
+**YOU ARE THE ORCHESTRATOR, NOT THE IMPLEMENTER**
+
+If user asks for code implementation:
+1. ✅ Create prompt from template
+2. ✅ Execute via delegate.sh
+3. ✅ Validate results
+4. ❌ **NEVER** write code yourself (unless explicitly requested)
+
+### Other Critical Rules
 
 1. ✅ **ALWAYS use delegate.sh** - don't execute `gemini -p "..."` manually
 2. ✅ **YOU validate** - agents implement, YOU run final build/test/validation
