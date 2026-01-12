@@ -79,26 +79,132 @@ backlog_task_update(task.id, {
 })
 ```
 
-### Fase 5: Gerenciamento de Subtarefas
+### 🚨 Fase 5: Gerenciamento de Subtarefas (OBRIGATÓRIO)
 
-**Nota**: A maioria das subtarefas (passos de implementação) já deve ter sido criada durante o `/spec-plan`.
+#### ⚠️ REGRA DE OURO DA SUBDIVISÃO ⚠️
 
-1. **Executar em Ordem**: Seguir a sequência planejada das subtasks.
-2. **Criar se Necessário**: Se durante a execução for identificada a necessidade de quebrar mais o trabalho, use `backlog_task_create` com `parent: task.id`.
+**TODA task com >3 ACs ou afetando >2 arquivos DEVE ser subdividida.**
 
-### Fase 6: Implementação com Subagentes (OU Delegar ao Gemini)
+**NUNCA** tente implementar tasks gigantes de uma vez. Isso leva a:
+- ❌ Esquecimento de requisitos importantes
+- ❌ Perda de argumentos e contexto
+- ❌ Implementação incompleta ou errada
+- ❌ Dificuldade de rastrear progresso
 
-**1. Escolher Especialista:***
+#### Critério de Subdivisão OBRIGATÓRIA
 
-- Claude (Sonnet) para orquestração e testes.
-- **Gemini-3-Flash** para codificação intensiva (via `gemini-orchestrator`).
+**SE** a task atende **QUALQUER** destes critérios:
+- ✅ **>3 Acceptance Criteria**
+- ✅ **Afecta >2 arquivos**
+- ✅ **Estimativa >4 horas**
+- ✅ **Múltiplas responsabilidades**
 
-**2. Instruir Agente com Contexto da Spec:***
+**ENTÃO: DEVE subdividir em subtarefas atômicas.**
 
+#### Processo de Subdivisão
+
+**1. Verificar critério:**
 ```javascript
-// Exemplo de prompt com spec
+const deveSubdividir = task.acceptance_criteria?.length > 3 ||
+                       task.affected_files?.length > 2 ||
+                       task.estimated_hours > 4
+```
+
+**2. SE SIM, criar subtarefas:**
+```javascript
+// Exemplo: subdividir task de autenticação
+const subtasks = [
+  { title: "Criar models User e Session", parent: task.id },
+  { title: "Implementar JWT service", parent: task.id },
+  { title: "Criar middleware de autenticação", parent: task.id },
+  { title: "Adicionar rotas de login/logout", parent: task.id },
+  { title: "Escrever testes", parent: task.id }
+]
+
+subtasks.forEach((sub, index) => {
+  backlog_task_create({
+    title: sub.title,
+    parent: sub.parent,
+    type: "subtask",
+    status: "To Do",
+    priority: task.priority,
+    labels: task.labels,
+    acceptance_criteria: [
+      `[ ] Implementação conforme spec`,
+      `[ ] Testes passando`,
+      `[ ] Code review aprovado`
+    ]
+  })
+})
+```
+
+**3. SE NÃO, justificar no notes:**
+```javascript
+backlog_task_update(task.id, {
+  notes: task.notes + `\n\n**Por que não subdividir?**\nTask tem apenas 2 ACs e afeta 1 arquivo. Subdivisão desnecessária.\n`
+})
+```
+
+#### Executar em Ordem
+
+Após subdivisão (ou verificação de que não é necessária):
+1. Listar subtarefas em ordem de dependência
+2. Executar cada subtask sequencialmente
+3. Marcar como concluída antes de iniciar próxima
+
+### 🚨 Fase 6: Implementação com Subagentes (OU Delegar ao Gemini)
+
+#### ⚠️ REGRA DE OURO: PASSAR CONTEXTO COMPLETO ⚠️
+
+**NUNCA** resuma a spec para o subagente. **SEMPRE** passe o CONTEÚDO INTEGRAL.
+
+#### 1. Escolher Especialista
+
+- **Claude (Sonnet)** para orquestração e testes
+- **Gemini-3-Flash** para codificação intensiva (via `gemini-orchestrator`)
+
+#### 2. OBRIGATÓRIO: Passar Contexto COMPLETO
+
+**NUNCA** faça isso:
+```javascript
+// ❌ ERRADO - Resumo vago
 `Implemente a subtask ${task.id} seguindo a spec ${specPath}.`
 ```
+
+**SEMPRE** faça isso:
+```javascript
+// ✅ CORRETO - Contexto COMPLETO
+const specContent = await fs.readFile(specPath, 'utf-8')
+
+const promptParaAgente = `
+# Task: ${task.title}
+
+## Spec COMPLETA (CONTEÚDO INTEGRAL):
+${specContent}
+
+## Todos os Acceptance Criteria:
+${task.acceptance_criteria.map((ac, i) => `${i + 1}. ${ac}`).join('\n')}
+
+## Contexto do Projeto:
+${projectContext}
+
+## Padrões Conhecidos:
+${memoryPatterns}
+
+## Implementar:
+- Seguir 100% a spec acima
+- NÃO resumir requisitos
+- NÃO omitir detalhes
+- Validar TODOS os ACs antes de finalizar
+`
+```
+
+**Por que contexto COMPLETO é OBRIGATÓRIO?**
+
+- ✅ Subagente tem TODOS os requisitos
+- ✅ Nada é perdido em resumos
+- ✅ ACs podem ser validados corretamente
+- ✅ Implementação segue spec exatamente
 
 ### Fase 7: Atualizar Notas Progressivamente
 

@@ -19,6 +19,52 @@ Este comando realiza uma revisão rigorosa antes da finalização de uma task, g
 
 ## Instruções para o Agente
 
+### 0. 🚨 FLUXOGRAMA DE STATUS OBRIGATÓRIO 🚨
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   FLUXO DE STATUS OBRIGATÓRIO               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  To Do ──────► In Progress ─────► In Review ─────► Done    │
+│   │              │                   │              │      │
+│   │              │                   │              │      │
+│   ▼              ▼                   ▼              ▼      │
+│ Blocked      (trabalho)        (revisão)      (concluída) │
+│                                                             │
+│  Regras:                                                   │
+│  1. Task DEVE estar "In Progress" ANTES de execução        │
+│  2. Mudar para "In Review" AO CHAMAR /spec-review         │
+│  3. Apenas "Done" APÓS TODOS os ACs marcados [x]          │
+│  4. "Blocked" se dependência impedir progresso             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### ⚠️ REGRA DE OURO DO STATUS ⚠️
+
+**NUNCA** pule etapas do fluxo:
+
+| De | Para | Quando | Comando |
+|-----|------|--------|---------|
+| **To Do** | **In Progress** | Ao iniciar execução | `/spec-execute` |
+| **In Progress** | **In Review** | Ao completar implementação | `/spec-review` (automático) |
+| **In Review** | **Done** | Após revisão aprovada | `/spec-retro` |
+| **In Review** | **In Progress** | Se revisão rejeitada | `/spec-execute` |
+| **Qualquer** | **Blocked** | Se dependência bloquear | Manual |
+
+**VERIFICAÇÃO OBRIGATÓRIA ANTES DE /SPEC-REVIEW:**
+```javascript
+if (task.status !== "In Progress") {
+  throw new Error(`❌ Task deve estar "In Progress" antes de /spec-review. Status atual: "${task.status}"`)
+}
+
+// Mudar para "In Review" ANTES de iniciar revisão
+backlog_task_update(task.id, { status: "In Review" })
+```
+
+---
+
 ### 1. Preparação e Leitura
 
 **Buscar task:**
