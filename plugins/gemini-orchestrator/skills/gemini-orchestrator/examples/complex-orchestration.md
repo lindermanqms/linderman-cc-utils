@@ -8,33 +8,33 @@ This example demonstrates a multi-phase delegation workflow: gemini-3-pro for de
 
 ```bash
 # 1. Create design prompt
-cp .gemini-orchestration/prompts/TEMPLATE-pro-planning.txt \
-   .gemini-orchestration/prompts/task-15-api-design.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-pro-planning.txt \
+   .claude/gemini-orchestrator/prompts/task-15-api-design.txt
 
 # 2. Fill prompt with context
 # (Edit task-15-api-design.txt with requirements, constraints, etc.)
 
 # 3. Execute design phase
 ./plugins/gemini-orchestrator/scripts/delegate.sh -m pro \
-  .gemini-orchestration/prompts/task-15-api-design.txt
+  .claude/gemini-orchestrator/prompts/task-15-api-design.txt
 
 # 4. Review design report
-cat .gemini-orchestration/reports/pro-2026-01-11-14-00.md
+cat .claude/gemini-orchestrator/reports/pro-2026-01-11-14-00.md
 ```
 
 ### PHASE 2: Implementation (gemini-3-flash)
 
 ```bash
 # 5. Create implementation prompt
-cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
-   .gemini-orchestration/prompts/task-15-api-impl.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
+   .claude/gemini-orchestrator/prompts/task-15-api-impl.txt
 
 # 6. Add design from Phase 1 to "DESIGN CONTEXT" section
 # (paste content from pro-*.md report into task-15-api-impl.txt)
 
 # 7. Execute implementation
 ./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
-  .gemini-orchestration/prompts/task-15-api-impl.txt
+  .claude/gemini-orchestrator/prompts/task-15-api-impl.txt
 ```
 
 ### PHASE 3: Validation (YOU as Orchestrator)

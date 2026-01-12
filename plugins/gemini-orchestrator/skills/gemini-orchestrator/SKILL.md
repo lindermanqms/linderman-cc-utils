@@ -1,6 +1,6 @@
 ---
 name: gemini-orchestrator
-description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", "delegate.sh", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models. Scripts are located at plugins/gemini-orchestrator/scripts/ and are executed directly from their installation location (NOT copied to project). Templates are in plugins/gemini-orchestrator/templates/ and must be copied to .gemini-orchestration/prompts/ during setup.
+description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", "delegate.sh", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models. Scripts are located at plugins/gemini-orchestrator/scripts/ and are executed directly from their installation location (NOT copied to project). Templates are in plugins/gemini-orchestrator/templates/ and must be copied to .claude/gemini-orchestrator/prompts/ during setup.
 version: 2.3.1
 ---
 
@@ -39,7 +39,7 @@ Enter **Orchestration Mode** to delegate tasks to Gemini AI models. This skill t
 
 When this skill is active:
 - **ALWAYS delegate code to agents** via `delegate.sh` script
-- **ALWAYS use template-based prompts** - create from templates in `.gemini-orchestration/prompts/`
+- **ALWAYS use template-based prompts** - create from templates in `.claude/gemini-orchestrator/prompts/`
 - **ALWAYS provide comprehensive context** - documentation, files, memory, URLs
 - **EXECUTE final validation yourself** - build, test, validate as Orchestrator (Sonnet)
 - **MANAGE project state yourself** - ALL Backlog.md MCP operations stay with you
@@ -97,30 +97,34 @@ delegate.sh prompt.txt    # ❌ Will fail
 ls -la plugins/gemini-orchestrator/scripts/delegate.sh
 
 # 2. Create orchestration directory structure
-mkdir -p .gemini-orchestration/prompts
-mkdir -p .gemini-orchestration/reports
+mkdir -p .claude/gemini-orchestrator/prompts
+mkdir -p .claude/gemini-orchestrator/reports
 
-# 3. Copy templates from plugin to your project
+# 3. Copy templates and setup guide from plugin to your project
 cp plugins/gemini-orchestrator/templates/TEMPLATE-*.txt \
-   .gemini-orchestration/prompts/
+   .claude/gemini-orchestrator/prompts/
+
+cp plugins/gemini-orchestrator/templates/SETUP-GUIDE.md \
+   .claude/gemini-orchestrator/README.md
 
 # 4. Verify templates were copied
-ls -la .gemini-orchestration/prompts/TEMPLATE-*.txt
+ls -la .claude/gemini-orchestrator/prompts/TEMPLATE-*.txt
+ls -la .claude/gemini-orchestrator/README.md
 ```
 
-**Important**: Templates are stored in the plugin at `plugins/gemini-orchestrator/templates/` and must be copied to your project's `.gemini-orchestration/prompts/` directory.
+**Important**: Templates and setup guide are stored in the plugin at `plugins/gemini-orchestrator/templates/` and must be copied to your project's `.claude/gemini-orchestrator/` directory for easy reference.
 
 ### Standard Delegation Process
 
 **Step 1: Create prompt from template**
 ```bash
 # For implementation (Flash)
-cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
-   .gemini-orchestration/prompts/task-ID-description.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
+   .claude/gemini-orchestrator/prompts/task-ID-description.txt
 
 # For planning (Pro)
-cp .gemini-orchestration/prompts/TEMPLATE-pro-planning.txt \
-   .gemini-orchestration/prompts/task-ID-design.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-pro-planning.txt \
+   .claude/gemini-orchestrator/prompts/task-ID-design.txt
 ```
 
 **Step 2: Edit prompt** - Fill in all sections:
@@ -135,17 +139,17 @@ cp .gemini-orchestration/prompts/TEMPLATE-pro-planning.txt \
 # Auto-detects model based on keywords
 # NOTE: Script automatically adds --approval-mode yolo, do NOT add it manually
 ./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .gemini-orchestration/prompts/task-ID-description.txt
+  .claude/gemini-orchestrator/prompts/task-ID-description.txt
 
 # Force specific model if needed
 ./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
-  .gemini-orchestration/prompts/task-ID-description.txt
+  .claude/gemini-orchestrator/prompts/task-ID-description.txt
 ```
 
 **Step 4: Review report**
 ```bash
 # Report saved automatically
-cat .gemini-orchestration/reports/flash-YYYY-MM-DD-HH-MM.md
+cat .claude/gemini-orchestrator/reports/flash-YYYY-MM-DD-HH-MM.md
 ```
 
 **Step 5: Validate (as Orchestrator)**
@@ -161,7 +165,7 @@ npm start  # For end-to-end validation
 // YOU do this (NOT the agent)
 await backlog_task_update({
   id: "task-ID",
-  notes: "Implementation completed via Gemini Flash. Report: .gemini-orchestration/reports/flash-*.md"
+  notes: "Implementation completed via Gemini Flash. Report: .claude/gemini-orchestrator/reports/flash-*.md"
 })
 ```
 
@@ -282,7 +286,7 @@ Complete guide on:
 - Template-based prompt creation
 - Auto-detection of model (Pro vs Flash)
 - Automatic report extraction and saving
-- `.gemini-orchestration/` directory structure
+- `.claude/gemini-orchestrator/` directory structure
 - Integration with spec-workflow and memory
 - Troubleshooting delegation errors
 - Examples and best practices
@@ -326,7 +330,7 @@ When in Orchestration Mode, follow these rules **without exception**:
 
 2. **NEVER use Edit/Write tools** for code implementation - delegate to agents
 
-3. **ALWAYS create prompts from templates** in `.gemini-orchestration/prompts/`
+3. **ALWAYS create prompts from templates** in `.claude/gemini-orchestrator/prompts/`
 
 4. **ALWAYS delegate coding** → `gemini-3-flash-preview` (via delegate.sh)
 
@@ -420,7 +424,7 @@ Before using this skill, ensure:
 3. **Orchestration directory initialized:**
    ```bash
    # Should exist with templates
-   ls .gemini-orchestration/prompts/TEMPLATE-*.txt
+   ls .claude/gemini-orchestrator/prompts/TEMPLATE-*.txt
    ```
 
 4. **Basic Memory MCP active** (optional but strongly recommended):
@@ -462,14 +466,14 @@ If user asks for code implementation:
 1. ✅ **ALWAYS use delegate.sh** - don't execute `gemini -p "..."` manually
 2. ✅ **YOU validate** - agents implement, YOU run final build/test/validation
 3. ✅ **YOU manage Backlog** - agents NEVER touch Backlog.md MCP
-4. ✅ **Prompts in files** - create from templates, save in `.gemini-orchestration/prompts/`
-5. ✅ **Reports auto-saved** - check `.gemini-orchestration/reports/` after delegations
+4. ✅ **Prompts in files** - create from templates, save in `.claude/gemini-orchestrator/prompts/`
+5. ✅ **Reports auto-saved** - check `.claude/gemini-orchestrator/reports/` after delegations
 6. ✅ **Memory integration** - fetch before, save after delegations
 
 ## Version History
 
 - **v2.2.1** (2026-01-11): Clarified responsibilities (validation, Backlog.md = Orchestrator)
-- **v2.2.0** (2026-01-11): Added delegate.sh script and .gemini-orchestration/ structure
+- **v2.2.0** (2026-01-11): Added delegate.sh script and .claude/gemini-orchestrator/ structure
 - **v2.1.1** (2026-01-11): Added --yolo, static analysis, error protocol
 - **v2.0.0** (2026-01-11): Transformed from agent to skill with progressive disclosure
 

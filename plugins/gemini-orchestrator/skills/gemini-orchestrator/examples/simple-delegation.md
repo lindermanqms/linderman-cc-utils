@@ -14,8 +14,8 @@ search_nodes({ query: "linderman-cc-utils auth patterns" })
 # Results: pattern-jwt-storage, pattern-chrome-extension-auth
 
 # 3. Create prompt from template
-cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
-   .gemini-orchestration/prompts/task-10-jwt-auth.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
+   .claude/gemini-orchestrator/prompts/task-10-jwt-auth.txt
 
 # 4. Edit prompt - fill in:
 #    - Memory Context (paste patterns from step 2)
@@ -25,15 +25,15 @@ cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
 
 # 5. Execute delegation via script
 ./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .gemini-orchestration/prompts/task-10-jwt-auth.txt
+  .claude/gemini-orchestrator/prompts/task-10-jwt-auth.txt
 
 # Script outputs:
 # ℹ Auto-detected model: gemini-3-flash-preview
 # ✓ Delegation completed successfully
-# ✓ Report extracted to: .gemini-orchestration/reports/flash-2026-01-11-15-30.md
+# ✓ Report extracted to: .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
 
 # 6. Review report
-cat .gemini-orchestration/reports/flash-2026-01-11-15-30.md
+cat .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
 
 # 7. Validate (YOU do this, not agent)
 npm run build
@@ -42,7 +42,7 @@ npm test
 # 8. Update Backlog (YOU do this, not agent)
 await backlog_task_update({
   id: "task-10",
-  notes: "JWT auth implemented. Report: .gemini-orchestration/reports/flash-2026-01-11-15-30.md"
+  notes: "JWT auth implemented. Report: .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md"
 })
 ```
 

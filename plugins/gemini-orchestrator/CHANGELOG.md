@@ -5,7 +5,7 @@
 ### Fixed
 - **Templates ausentes**: Criado diretório `templates/` com TEMPLATE-*.txt
   - **Problema**: Erro ao tentar copiar templates (arquivo não encontrado)
-  - **Causa**: Templates estavam apenas em `.gemini-orchestration/` (gitignored), não no plugin
+  - **Causa**: Templates estavam apenas em `.claude/gemini-orchestrator/` (gitignored), não no plugin
   - **Solução**: Criado `plugins/gemini-orchestrator/templates/` com templates versionados
 
 ### Added
@@ -16,14 +16,14 @@
 
 ### Changed
 - **SKILL.md - Setup (One-Time)**: Atualizada seção de setup
-  - Adicionado passo 2: Criar estrutura `.gemini-orchestration/`
+  - Adicionado passo 2: Criar estrutura `.claude/gemini-orchestrator/`
   - Adicionado passo 3: Copiar templates do plugin para o projeto
-  - Comando: `cp plugins/gemini-orchestrator/templates/TEMPLATE-*.txt .gemini-orchestration/prompts/`
+  - Comando: `cp plugins/gemini-orchestrator/templates/TEMPLATE-*.txt .claude/gemini-orchestrator/prompts/`
   - Explicação: Templates ficam no plugin (versionados), são copiados para projeto (uso)
 
 - **description (frontmatter)**: Atualizada para mencionar templates
   - "Templates are in plugins/gemini-orchestrator/templates/"
-  - "must be copied to .gemini-orchestration/prompts/ during setup"
+  - "must be copied to .claude/gemini-orchestrator/prompts/ during setup"
 
 ### Rationale
 
@@ -34,8 +34,8 @@ cp: não foi possível obter estado de 'plugins/gemini-orchestrator/templates/TE
 ```
 
 **Raiz do problema**:
-- Templates existiam apenas em `.gemini-orchestration/prompts/` do projeto atual
-- `.gemini-orchestration/` está no `.gitignore` → não é versionado
+- Templates existiam apenas em `.claude/gemini-orchestrator/prompts/` do projeto atual
+- `.claude/gemini-orchestrator/` está no `.gitignore` → não é versionado
 - Outros projetos não recebiam os templates quando instalavam o plugin
 
 **Solução aplicada**:
@@ -54,7 +54,7 @@ plugins/gemini-orchestrator/
 └── scripts/
     └── delegate.sh
 
-projeto/.gemini-orchestration/  ← Diretório de trabalho (gitignored)
+projeto/.claude/gemini-orchestrator/  ← Diretório de trabalho (gitignored)
 └── prompts/
     ├── TEMPLATE-*.txt (copiados do plugin durante setup)
     └── task-*.txt (prompts de tarefas específicas)
@@ -321,16 +321,16 @@ projeto/.gemini-orchestration/  ← Diretório de trabalho (gitignored)
 - **Script `delegate.sh`** para execução padronizada de delegações
   - Lê prompts de arquivos (evita problemas de parsing multiline)
   - Auto-detecta modelo (Pro vs Flash) baseado em keywords
-  - Salva relatórios automaticamente em `.gemini-orchestration/reports/`
+  - Salva relatórios automaticamente em `.claude/gemini-orchestrator/reports/`
   - Extrai relatórios estruturados usando `extract-report.sh`
   - Nomenclatura padronizada: `{model}-{timestamp}.md`
   - Output completo salvo em `*-full.log` para debugging
-- **Estrutura `.gemini-orchestration/`** na raiz do projeto
+- **Estrutura `.claude/gemini-orchestrator/`** na raiz do projeto
   - `prompts/` - Arquivos de prompt (.txt)
   - `reports/` - Relatórios gerados (.md, .log)
   - Templates: `TEMPLATE-pro-planning.txt`, `TEMPLATE-flash-implementation.txt`
   - README.md com workflow completo
-- **`.gitignore`** atualizado para ignorar `.gemini-orchestration/`
+- **`.gitignore`** atualizado para ignorar `.claude/gemini-orchestrator/`
 
 ### Novos Componentes
 
@@ -347,7 +347,7 @@ projeto/.gemini-orchestration/  ← Diretório de trabalho (gitignored)
 - `TEMPLATE-flash-implementation.txt` - Template para gemini-3-flash (6 seções)
 
 **Documentação**:
-- `.gemini-orchestration/README.md` - Guia completo do workflow
+- `templates/SETUP-GUIDE.md` - Guia completo do workflow (copiar para .claude/gemini-orchestrator/README.md)
 - `references/delegate-script-workflow.md` - Referência técnica
 
 ### Changed
@@ -386,29 +386,29 @@ gemini -p "
 **Workflow básico**:
 ```bash
 # 1. Criar prompt baseado em template
-cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
-   .gemini-orchestration/prompts/task-10.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
+   .claude/gemini-orchestrator/prompts/task-10.txt
 
 # 2. Editar prompt (preencher contexto, ACs, etc.)
-vim .gemini-orchestration/prompts/task-10.txt
+vim .claude/gemini-orchestrator/prompts/task-10.txt
 
 # 3. Executar delegação (auto-detecta modelo)
 ./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .gemini-orchestration/prompts/task-10.txt
+  .claude/gemini-orchestrator/prompts/task-10.txt
 
 # 4. Revisar relatório
-cat .gemini-orchestration/reports/flash-2026-01-11-15-30.md
+cat .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
 ```
 
 **Delegação complexa (Pro → Flash)**:
 ```bash
 # Design (Pro)
 ./plugins/gemini-orchestrator/scripts/delegate.sh -m pro \
-  .gemini-orchestration/prompts/design-api.txt
+  .claude/gemini-orchestrator/prompts/design-api.txt
 
 # Implementação (Flash) - usar output do Pro
 ./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
-  .gemini-orchestration/prompts/implement-api.txt
+  .claude/gemini-orchestrator/prompts/implement-api.txt
 ```
 
 **Salvar prompt temporário**:
@@ -427,10 +427,10 @@ cat .gemini-orchestration/reports/flash-2026-01-11-15-30.md
 **Arquivos criados**: 6
 - 1 script: `scripts/delegate.sh`
 - 2 templates: `TEMPLATE-pro-planning.txt`, `TEMPLATE-flash-implementation.txt`
-- 3 documentações: `.gemini-orchestration/README.md`, `references/delegate-script-workflow.md`, `.gitignore`
+- 3 documentações: `templates/SETUP-GUIDE.md` (copiar para .claude/gemini-orchestrator/README.md), `references/delegate-script-workflow.md`, `.gitignore`
 
 **Diretórios criados**: 1
-- `.gemini-orchestration/` (com `prompts/` e `reports/` subdirs)
+- `.claude/gemini-orchestrator/` (com `prompts/` e `reports/` subdirs)
 
 **Linhas de código**:
 - `delegate.sh`: ~350 linhas

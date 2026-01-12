@@ -12,7 +12,7 @@ O script `delegate.sh` resolve problemas de parsing, salva relatórios automatic
 
 O projeto já deve ter:
 ```
-.gemini-orchestration/
+.claude/gemini-orchestrator/
 ├── prompts/               # Arquivos de prompt
 │   ├── TEMPLATE-pro-planning.txt
 │   └── TEMPLATE-flash-implementation.txt
@@ -43,12 +43,12 @@ echo $GEMINI_API_KEY
 
 ```bash
 # Para planejamento (Pro)
-cp .gemini-orchestration/prompts/TEMPLATE-pro-planning.txt \
-   .gemini-orchestration/prompts/task-10-design.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-pro-planning.txt \
+   .claude/gemini-orchestrator/prompts/task-10-design.txt
 
 # Para implementação (Flash)
-cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
-   .gemini-orchestration/prompts/task-10-implement.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
+   .claude/gemini-orchestrator/prompts/task-10-implement.txt
 ```
 
 ### Passo 2: Editar Prompt
@@ -93,20 +93,20 @@ Implement JWT authentication with refresh tokens for the PJe extension.
 ```bash
 # Auto-detecta modelo
 ./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .gemini-orchestration/prompts/task-10-implement.txt
+  .claude/gemini-orchestrator/prompts/task-10-implement.txt
 
 # Ou especificar modelo
 ./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
-  .gemini-orchestration/prompts/task-10-implement.txt
+  .claude/gemini-orchestrator/prompts/task-10-implement.txt
 ```
 
 Output:
 ```
 ℹ Auto-detected model: gemini-3-flash-preview
-ℹ Output will be saved to: .gemini-orchestration/reports/flash-2026-01-11-15-30.md
+ℹ Output will be saved to: .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
 ℹ Executing delegation with gemini-3-flash-preview...
 ✓ Delegation completed successfully
-✓ Report extracted to: .gemini-orchestration/reports/flash-2026-01-11-15-30.md
+✓ Report extracted to: .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 REPORT PREVIEW:
@@ -121,10 +121,10 @@ REPORT PREVIEW:
 
 ```bash
 # Ver relatório estruturado
-cat .gemini-orchestration/reports/flash-2026-01-11-15-30.md
+cat .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
 
 # Ver output completo (se necessário debugging)
-cat .gemini-orchestration/reports/flash-2026-01-11-15-30-full.log
+cat .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30-full.log
 ```
 
 ## Exemplos Práticos
@@ -133,7 +133,7 @@ cat .gemini-orchestration/reports/flash-2026-01-11-15-30-full.log
 
 ```bash
 # 1. Criar prompt
-cat > .gemini-orchestration/prompts/fix-auth-bug.txt << 'EOF'
+cat > .claude/gemini-orchestrator/prompts/fix-auth-bug.txt << 'EOF'
 # IMPLEMENTATION TASK - Fix Authentication Bug
 
 You are Gemini-3-Flash, expert TypeScript developer.
@@ -154,17 +154,17 @@ EOF
 
 # 2. Executar
 ./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .gemini-orchestration/prompts/fix-auth-bug.txt
+  .claude/gemini-orchestrator/prompts/fix-auth-bug.txt
 
 # 3. Revisar
-cat .gemini-orchestration/reports/flash-*.md | tail -n 50
+cat .claude/gemini-orchestrator/reports/flash-*.md | tail -n 50
 ```
 
 ### Exemplo 2: Complex Orchestration (Pro → Flash)
 
 ```bash
 # FASE 1: Design (Pro)
-cat > .gemini-orchestration/prompts/task-10-design.txt << 'EOF'
+cat > .claude/gemini-orchestrator/prompts/task-10-design.txt << 'EOF'
 # PLANNING TASK - Design API Authentication System
 
 IMPORTANT: This is a PLANNING task (NOT implementation).
@@ -181,13 +181,13 @@ CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT...
 EOF
 
 ./plugins/gemini-orchestrator/scripts/delegate.sh -m pro \
-  .gemini-orchestration/prompts/task-10-design.txt
+  .claude/gemini-orchestrator/prompts/task-10-design.txt
 
 # FASE 2: Implementation (Flash)
 # Copiar output do Pro para o prompt do Flash
-cat .gemini-orchestration/reports/pro-*.md > design-output.txt
+cat .claude/gemini-orchestrator/reports/pro-*.md > design-output.txt
 
-cat > .gemini-orchestration/prompts/task-10-implement.txt << 'EOF'
+cat > .claude/gemini-orchestrator/prompts/task-10-implement.txt << 'EOF'
 # IMPLEMENTATION TASK - Implement Authentication System
 
 ## DESIGN CONTEXT (from Pro)
@@ -198,7 +198,7 @@ Implement the authentication system as designed by Pro...
 EOF
 
 ./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
-  .gemini-orchestration/prompts/task-10-implement.txt
+  .claude/gemini-orchestrator/prompts/task-10-implement.txt
 ```
 
 ### Exemplo 3: Com Spec-Workflow
@@ -208,19 +208,19 @@ EOF
 backlog task view task-10
 
 # 2. Criar prompt baseado na spec
-cp .gemini-orchestration/prompts/TEMPLATE-flash-implementation.txt \
-   .gemini-orchestration/prompts/task-10.txt
+cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
+   .claude/gemini-orchestrator/prompts/task-10.txt
 
 # 3. Editar (colar ACs da spec)
-vim .gemini-orchestration/prompts/task-10.txt
+vim .claude/gemini-orchestrator/prompts/task-10.txt
 
 # 4. Executar delegação
 ./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .gemini-orchestration/prompts/task-10.txt
+  .claude/gemini-orchestrator/prompts/task-10.txt
 
 # 5. Atualizar task
 backlog task update task-10 \
-  --notes "Implementação via Gemini Flash concluída. Ver: .gemini-orchestration/reports/flash-*.md"
+  --notes "Implementação via Gemini Flash concluída. Ver: .claude/gemini-orchestrator/reports/flash-*.md"
 ```
 
 ## Opções Avançadas
@@ -234,7 +234,7 @@ backlog task update task-10 \
 
 Resultado:
 ```
-✓ Prompt saved to: .gemini-orchestration/prompts/my-prompt.txt
+✓ Prompt saved to: .claude/gemini-orchestrator/prompts/my-prompt.txt
 ```
 
 ### Output Customizado
@@ -242,8 +242,8 @@ Resultado:
 ```bash
 # Nomear relatório
 ./plugins/gemini-orchestrator/scripts/delegate.sh \
-  -o .gemini-orchestration/reports/task-10-final.md \
-  .gemini-orchestration/prompts/task-10.txt
+  -o .claude/gemini-orchestrator/reports/task-10-final.md \
+  .claude/gemini-orchestrator/prompts/task-10.txt
 ```
 
 ### Formato JSON
@@ -252,7 +252,7 @@ Resultado:
 # Útil para parsing programático
 ./plugins/gemini-orchestrator/scripts/delegate.sh \
   -f json \
-  .gemini-orchestration/prompts/task-10.txt
+  .claude/gemini-orchestrator/prompts/task-10.txt
 ```
 
 ## Integração com Memory
@@ -296,7 +296,7 @@ Para forçar: `-m pro` ou `-m flash`
 Se `gemini` falhar:
 ```
 ✗ Delegation failed
-✗ Error output saved to: .gemini-orchestration/reports/flash-*-error.log
+✗ Error output saved to: .claude/gemini-orchestrator/reports/flash-*-error.log
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ERROR OUTPUT:

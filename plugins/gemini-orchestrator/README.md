@@ -155,11 +155,13 @@ Script helper para executar delegações de forma padronizada:
 **Recursos**:
 - ✅ Lê prompts de arquivos (evita problemas de parsing)
 - ✅ Auto-detecta modelo (Pro vs Flash) baseado em keywords
-- ✅ Salva relatórios automaticamente em `.gemini-orchestration/reports/`
+- ✅ Salva relatórios automaticamente em `.claude/gemini-orchestrator/reports/`
 - ✅ Extrai relatórios estruturados
 - ✅ Histórico organizado de delegações
 
-Consulte `.gemini-orchestration/README.md` para workflow completo.
+Para workflow completo, consulte:
+- `templates/SETUP-GUIDE.md` - Guia de setup e workflow completo
+- `skills/gemini-orchestrator/references/delegate-script-workflow.md` - Documentação detalhada do delegate.sh
 
 ## Recursos Adicionais
 
@@ -173,7 +175,7 @@ Consulte `.gemini-orchestration/README.md` para workflow completo.
 - 🐛 **BUGFIX**: Templates ausentes - Erro ao copiar TEMPLATE-*.txt
   - Criado diretório `templates/` no plugin com templates versionados
   - Templates agora disponíveis em `plugins/gemini-orchestrator/templates/`
-  - Documentado processo de setup para copiar templates para `.gemini-orchestration/prompts/`
+  - Documentado processo de setup para copiar templates para `.claude/gemini-orchestrator/prompts/`
   - README.md em templates/ explica estrutura completa
 
 **v2.3.0** (2026-01-11)
@@ -214,7 +216,7 @@ Consulte `.gemini-orchestration/README.md` para workflow completo.
 **v2.2.0** (2026-01-11)
 - ✅ Script `delegate.sh` para execução padronizada
 - ✅ Templates de prompt (Pro e Flash)
-- ✅ Estrutura `.gemini-orchestration/` para organização
+- ✅ Estrutura `.claude/gemini-orchestrator/` para organização
 - ✅ Auto-detecção de modelo baseada em keywords
 - ✅ Salvamento automático de relatórios
 

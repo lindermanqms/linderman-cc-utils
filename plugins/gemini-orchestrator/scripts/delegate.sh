@@ -9,7 +9,7 @@
 #   -m, --model <model>     Model to use (pro|flash) [default: auto-detect]
 #   -o, --output <file>     Output report file [default: auto-generated]
 #   -f, --format <fmt>      Report format (plain|markdown|json) [default: markdown]
-#   -s, --save-prompt       Save prompt to .gemini-orchestration/prompts/
+#   -s, --save-prompt       Save prompt to .claude/gemini-orchestrator/prompts/
 #   -h, --help              Show this help message
 #
 # Examples:
@@ -38,7 +38,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PLUGIN_ROOT")"
-ORCHESTRATION_DIR="$PROJECT_ROOT/.gemini-orchestration"
+ORCHESTRATION_DIR="$PROJECT_ROOT/.claude/gemini-orchestrator"
 PROMPTS_DIR="$ORCHESTRATION_DIR/prompts"
 REPORTS_DIR="$ORCHESTRATION_DIR/reports"
 
