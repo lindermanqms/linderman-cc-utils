@@ -169,6 +169,47 @@ await backlog_task_update({
 })
 ```
 
+### Alternative: Manual `gemini` Command (When delegate.sh fails)
+
+If `delegate.sh` script is not working, use manual `gemini` command with report capture:
+
+**Step 1: Create prompt from template** (same as above)
+
+**Step 2: Edit prompt** (same as above)
+
+**Step 3: Execute delegation manually**
+```bash
+# For Flash implementation
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/flash-$TIMESTAMP.md"
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID-description.txt)" \
+  2>&1 | tee "$REPORT_FILE"
+
+# For Pro planning
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/pro-$TIMESTAMP.md"
+gemini -m gemini-3-pro-preview \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID-design.txt)" \
+  2>&1 | tee "$REPORT_FILE"
+```
+
+**IMPORTANT**:
+- Always use `--approval-mode yolo` for auto-approval
+- Capture output with `2>&1 | tee` to save report AND see it live
+- Timestamp ensures unique report names
+- Full path required: `.claude/gemini-orchestrator/prompts/`
+
+**Step 4: Review report**
+```bash
+# Report saved with timestamp
+cat .claude/gemini-orchestrator/reports/flash-$TIMESTAMP.md
+```
+
+**Step 5: Validate** (same as above)
+
+**Step 6: Update Backlog** (same as above)
+
 ### Why Use delegate.sh?
 
 | Aspect | Manual `gemini -p "..."` | **delegate.sh (Recommended)** |
