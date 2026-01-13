@@ -43,17 +43,125 @@ if (tasks.length > 0) {
 }
 ```
 
-### Fase 2: Verificar e Gerenciar Dependências
+### 🚨 Fase 2: Validar Dependencies (OBRIGATÓRIO - Bloqueio Automático)
 
-**CRÍTICO**: Antes de iniciar, verificar se todas as dependências da task (especialmente se for uma subtask) estão concluídas.
+**CRÍTICO**: Antes de iniciar, verificar se todas as dependências da task estão concluídas. SE houver dependências pendentes, BLOQUEAR execução.
 
 ```javascript
 if (task.dependencies && task.dependencies.length > 0) {
-  // ... verificação de blockers ...
+  console.log(`\n🔗 Validando ${task.dependencies.length} dependência(s)...`)
+
+  const blockers = []
+  const completed = []
+
+  for (const depId of task.dependencies) {
+    const depTask = backlog_task_get(depId)
+
+    if (!depTask) {
+      console.warn(`   ⚠️ ${depId} não encontrada (pode ter sido deletada)`)
+      continue
+    }
+
+    if (depTask.status !== "Done") {
+      blockers.push({
+        id: depId,
+        title: depTask.title,
+        status: depTask.status
+      })
+    } else {
+      completed.push(depId)
+    }
+  }
+
+  // Reportar dependências concluídas
+  if (completed.length > 0) {
+    console.log(`   ✅ ${completed.length} dependência(s) já concluída(s):`)
+    completed.forEach(depId => {
+      const depTask = backlog_task_get(depId)
+      console.log(`      - ${depId}: ${depTask.title}`)
+    })
+  }
+
+  // SE houver blockers, BLOQUEAR execução
+  if (blockers.length > 0) {
+    console.error("\n❌ BLOCKED: Dependências pendentes detectadas!")
+    console.error("\n📋 Tasks que precisam ser concluídas primeiro:")
+    blockers.forEach(b => {
+      const statusEmoji = {
+        "To Do": "📝",
+        "In Progress": "🔄",
+        "In Review": "👀",
+        "Blocked": "🚫"
+      }[b.status] || "❓"
+
+      console.error(`   ${statusEmoji} **${b.id}**: ${b.title}`)
+      console.error(`      Status: ${b.status}`)
+    })
+
+    console.error("\n🔧 Ações necessárias:")
+    console.error("   1. Executar as tasks dependentes primeiro:")
+    blockers.forEach(b => {
+      console.error(`      /spec-execute ${b.id}`)
+    })
+    console.error("\n   2. OU remover dependência se desnecessária:")
+    console.error(`      backlog_task_edit("${task.id}", {`)
+    console.error(`        remove_dependencies: ["${blockers[0].id}"]`)
+    console.error(`      })`)
+
+    // BLOQUEAR execução
+    throw new Error(`Task ${task.id} está BLOQUEADA por ${blockers.length} dependência(s) pendente(s). Execute as tasks listadas acima primeiro.`)
+  }
+
+  console.log("\n✅ Todas as dependências estão validadas!")
 }
 ```
 
-### Fase 3: Leitura da Especificação (Spec)
+### 📋 Fase 3: Ler e Seguir Plan (OBRIGATÓRIO)
+
+**CRÍTICO**: Ler o Plan da task e seguir a estratégia de implementação documentada.
+
+```javascript
+if (task.plan) {
+  console.log("\n📋 **Plan de Implementação Encontrado:**")
+  console.log("─".repeat(60))
+  console.log(task.plan)
+  console.log("─".repeat(60))
+
+  // Analisar estrutura do plan
+  const planLines = task.plan.split('\n')
+  const sections = planLines.filter(line => line.startsWith('##'))
+
+  console.log(`\n✋ O Plan contém ${sections.length} seções de implementação`)
+
+  // Exibir passos principais
+  console.log("\n🎯 **Passos Identificados no Plan:**")
+  sections.forEach((section, index) => {
+    const cleanSection = section.replace(/^##\s*/, '').trim()
+    console.log(`   ${index + 1}. ${cleanSection}`)
+  })
+
+  // Perguntar confirmação (opcional)
+  console.log("\n✅ Seguir este plan durante implementação?")
+
+} else {
+  console.log("\n⚠️ Esta task NÃO possui um Plan de Implementação.")
+  console.log("   Recomendado criar um Plan ANTES de implementar:")
+  console.log(`\n   backlog_task_edit("${task.id}", {`)
+  console.log(`     plan: \``)
+  console.log(`   ## Estratégia de Implementação`)
+  console.log(`   ### Passo 1: ...`)
+  console.log(`   ### Passo 2: ...`)
+  console.log(`   \``)
+  console.log(`   })`)
+
+  // Opcional: Bloquear execução sem plan
+  // if (complexityScore > 5) {
+  //   throw new Error("Plan OBRIGATÓRIO para tasks com complexidade > 5")
+  // }
+}
+```
+
+### Fase 4: Leitura da Especificação (Spec)
 
 **1. Identificar Spec vinculada:**
 
@@ -69,7 +177,7 @@ if (!specMatch && task.parent) {
 }
 ```
 
-### Fase 4: Atualizar Status para "In Progress"
+### Fase 5: Atualizar Status para "In Progress"
 
 ```javascript
 backlog_task_update(task.id, {
@@ -79,7 +187,7 @@ backlog_task_update(task.id, {
 })
 ```
 
-### 🚨 Fase 5: Gerenciamento de Subtarefas (OBRIGATÓRIO)
+### 🚨 Fase 6: Gerenciamento de Subtarefas (OBRIGATÓRIO)
 
 #### ⚠️ REGRA DE OURO DA SUBDIVISÃO ⚠️
 
@@ -152,7 +260,7 @@ Após subdivisão (ou verificação de que não é necessária):
 2. Executar cada subtask sequencialmente
 3. Marcar como concluída antes de iniciar próxima
 
-### 🚨 Fase 6: Implementação com Subagentes (OU Delegar ao Gemini)
+### 🚨 Fase 7: Implementação com Subagentes (OU Delegar ao Gemini)
 
 #### ⚠️ REGRA DE OURO: PASSAR CONTEXTO COMPLETO ⚠️
 
@@ -206,7 +314,7 @@ ${memoryPatterns}
 - ✅ ACs podem ser validados corretamente
 - ✅ Implementação segue spec exatamente
 
-### Fase 7: Atualizar Notas Progressivamente
+### Fase 8: Atualizar Notas Progressivamente
 
 **Durante a execução, registrar observações incrementalmente:***
 
@@ -218,7 +326,7 @@ backlog_task_update(task.id, {
 })
 ```
 
-### Fase 8: Marcar ACs como Concluídos (OBRIGATÓRIO)
+### Fase 9: Marcar ACs como Concluídos (OBRIGATÓRIO)
 
 #### ⚠️ USE `task_edit` PARA MARCAR ACS INDIVIDUAIS ⚠️
 
@@ -305,7 +413,7 @@ console.log(`Progresso: ${completed}/${updatedTask.acceptance_criteria.length} A
 - ✅ **Validação fácil** - `/spec-review` pode contar ACs [x] automaticamente
 - ✅ **Histórico preservado** - Notas incrementais mostram evolução
 
-### Fase 9: Finalização da Subtask
+### Fase 10: Finalização da Subtask
 
 Mudar status para "In Review" e sugerir `/spec-review`.
 
