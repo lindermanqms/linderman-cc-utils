@@ -324,7 +324,105 @@ ${memoryPatterns}
 - ✅ ACs podem ser validados corretamente
 - ✅ Implementação segue o Plan (Spec) exatamente
 
-#### 3. 🤖 REGRAS PARA AGENTES GEMINI (OBRIGATÓRIO)
+#### 3. ⚠️ OBRIGATÓRIO: Especificar Arquivos Permitidos
+
+**CRÍTICO**: SEMPRE especificar quais arquivos o agente Gemini PODE e NÃO PODE mexer para evitar sobreposição de tarefas.
+
+```javascript
+// ✅ CORRETO - Especificar arquivos explicitamente
+const promptParaAgente = `
+# Task: ${task.title}
+
+## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
+- src/auth/models.ts
+- src/auth/services.ts
+- src/auth/middleware.ts
+
+## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
+- src/auth/routes.ts (outro agente está responsável)
+- src/auth/controllers.ts (outro agente está responsável)
+- src/main.ts (NÃO modificar sem permissão)
+
+## ⚠️ REGRA:
+- MODIFICAR APENAS os arquivos listados em "ARQUIVOS PERMITIDOS"
+- SE precisar modificar arquivo proibido, PEÇA PERMISSÃO PRIMEIRO
+- NUNCA modifique arquivos que outros agentes estão usando simultaneamente
+
+## Implementação:
+...
+`
+```
+
+**Por que especificar arquivos é OBRIGATÓRIO?**
+
+- ✅ **Evita conflitos**: Múltiplos agentes não modificam o mesmo arquivo
+- ✅ **Delimitação clara**: Cada agente sabe exatamente o que pode tocar
+- ✅ **Paralelização**: Diferentes agentes podem trabalhar em paralelo sem conflito
+- ✅ **Segurança**: Arquivos críticos (main.ts, config) não são modificados acidentalmente
+
+**Como identificar quais arquivos especificar:**
+
+```javascript
+// 1. Ler o Plan da task
+const planContent = task.plan
+
+// 2. Extrair arquivos mencionados no Plan
+const arquivosMencionados = planContent.match(/[\w-/]+\.(ts|js|tsx|jsx)/g) || []
+
+// 3. Listar arquivos permitidos
+const arquivosPermitidos = [
+  ...arquivosMencionados,
+  // Arquivos relacionados à task
+]
+
+// 4. Listar arquivos proibidos (se necessário)
+const arquivosProibidos = [
+  // Arquivos que outros agentes estão usando
+  "src/routes.ts",  // Outro agente
+  "src/config.ts",   // Crítico
+]
+
+// 5. Montar prompt
+promptParaAgente += `
+## 📁 ARQUIVOS PERMITIDOS:
+${arquivosPermitidos.map(f => `- ${f}`).join('\n')}
+
+## 🚫 ARQUIVOS PROIBIDOS:
+${arquivosProibidos.map(f => `- ${f}`).join('\n')}
+`
+```
+
+**Exemplo Prático:**
+
+```javascript
+// Task: Implementar Models e Services de Autenticação
+
+const promptParaGemini = `
+# Task: Implementar Models e Services de Autenticação
+
+## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
+- src/auth/models/user.ts
+- src/auth/models/session.ts
+- src/auth/services/auth.service.ts
+- src/auth/services/token.service.ts
+
+## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
+- src/auth/routes/auth.routes.ts (agente task-12)
+- src/auth/controllers/auth.controller.ts (agente task-12)
+- src/auth/middleware/auth.middleware.ts (agente task-13)
+- src/main.ts (ARQUIVO CRÍTICO - proibido)
+
+## ⚠️ INSTRUÇÕES:
+1. Criar/modificar APENAS os arquivos listados em "PERMITIDOS"
+2. SE precisar de routes/controllers/middleware, AVISE PRIMEIRO
+3. NUNCA modifique main.ts
+
+## Plan:
+...
+`
+```
+
+#### 4. 🤖 REGRAS PARA AGENTES GEMINI (OBRIGATÓRIO)
 
 **⚠️ CONDICIONAL: Aplica-se APENAS quando delegando para agentes Gemini**
 

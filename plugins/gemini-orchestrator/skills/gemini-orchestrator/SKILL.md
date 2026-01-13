@@ -189,6 +189,86 @@ cp .claude/gemini-orchestrator/prompts/TEMPLATE-pro-planning.txt \
 - Task Description (requisitos detalhados)
 - Acceptance Criteria (do Backlog.md se usando spec-workflow)
 - Technical Requirements
+- **📁 ARQUIVOS PERMITIDOS E PROIBIDOS (OBRIGATÓRIO se usando spec-workflow)**
+
+**Step 2.5: Especificar Arquivos Permitidos (OBRIGATÓRIO)**
+
+**⚠️ CRÍTICO**: SEMPRE especificar quais arquivos o agente Gemini PODE e NÃO PODE mexer.
+
+**Por que é OBRIGATÓRIO:**
+- ✅ Evita conflitos quando múltiplos agentes trabalham em paralelo
+- ✅ Delimitação clara do escopo do agente
+- ✅ Protege arquivos críticos (main.ts, config)
+- ✅ Previne sobreposição de trabalho
+
+**Adicionar ao prompt:**
+
+```markdown
+## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
+- src/auth/models/user.ts
+- src/auth/services/auth.service.ts
+- src/auth/middleware/auth.middleware.ts
+
+## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
+- src/auth/routes/auth.routes.ts (outro agente está responsável)
+- src/auth/controllers/auth.controller.ts (outro agente está responsável)
+- src/main.ts (ARQUIVO CRÍTICO - proibido)
+
+## ⚠️ REGRA:
+1. MODIFICAR APENAS os arquivos listados em "ARQUIVOS PERMITIDOS"
+2. SE precisar modificar arquivo proibido, PEÇA PERMISSÃO PRIMEIRO
+3. NUNCA modifique arquivos que outros agentes estão usando simultaneamente
+```
+
+**Como identificar arquivos:**
+
+```javascript
+// 1. Extrair do Plan da task
+const planContent = task.plan
+const arquivosMencionados = planContent.match(/[\w-/]+\.(ts|js|tsx|jsx)/g) || []
+
+// 2. Adicionar ao prompt
+prompt += `
+## 📁 ARQUIVOS PERMITIDOS:
+${arquivosMencionados.map(f => `- ${f}`).join('\n')}
+
+## 🚫 ARQUIVOS PROIBIDOS:
+- src/main.ts (CRÍTICO)
+- src/config.ts (CRÍTICO)
+[lista de arquivos que outros agentes estão usando]
+`
+```
+
+**Exemplo Prático:**
+
+```javascript
+// Task: Implementar Models e Services
+// Outras tasks simultâneas:
+//   - task-12: Routes (agente B)
+//   - task-13: Controllers (agente C)
+
+const prompt = `
+# Task: Implementar Models e Services
+
+## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
+- src/auth/models/user.ts
+- src/auth/models/session.ts
+- src/auth/services/auth.service.ts
+
+## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
+- src/auth/routes/ (task-12 - agente B)
+- src/auth/controllers/ (task-13 - agente C)
+- src/main.ts (CRÍTICO)
+
+## ⚠️ INSTRUÇÕES:
+1. Criar/modificar APENAS models e services
+2. SE precisar de routes/controllers, AVISE PRIMEIRO
+3. NUNCA modifique main.ts
+
+## Plan:
+...
+`
+```
 
 **Step 3: Executar delegação**
 ```bash

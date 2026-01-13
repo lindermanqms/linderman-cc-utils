@@ -160,6 +160,145 @@ backlog_task_update("task-10", {
 Veja abaixo os requisitos detalhados...
 ```
 
+## 📁 Especificação de Arquivos Permitidos (OBRIGATÓRIO)
+
+**⚠️ CRÍTICO**: SEMPRE especificar quais arquivos o agente Gemini PODE e NÃO PODE mexer.
+
+### Por Que Especificar Arquivos?
+
+- ✅ **Evita conflitos**: Múltiplos agentes não modificam o mesmo arquivo
+- ✅ **Delimitação clara**: Cada agente sabe exatamente o que pode tocar
+- ✅ **Paralelização**: Diferentes agentes podem trabalhar em paralelo sem conflito
+- ✅ **Segurança**: Arquivos críticos (main.ts, config) não são modificados acidentalmente
+
+### Como Especificar
+
+**Adicionar ao prompt do Gemini:**
+
+```markdown
+## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
+- src/auth/models/user.ts
+- src/auth/services/auth.service.ts
+- src/auth/middleware/auth.middleware.ts
+
+## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
+- src/auth/routes/auth.routes.ts (task-12 - outro agente)
+- src/auth/controllers/auth.controller.ts (task-13 - outro agente)
+- src/main.ts (ARQUIVO CRÍTICO - proibido)
+
+## ⚠️ REGRAS:
+1. MODIFICAR APENAS os arquivos listados em "ARQUIVOS PERMITIDOS"
+2. SE precisar modificar arquivo proibido, PEÇA PERMISSÃO PRIMEIRO
+3. NUNCA modifique arquivos que outros agentes estão usando simultaneamente
+```
+
+### Como Identificar Arquivos
+
+```javascript
+// 1. Ler o Plan da task
+const planContent = task.plan
+
+// 2. Extrair arquivos mencionados no Plan
+const arquivosMencionados = planContent.match(/[\w-/]+\.(ts|js|tsx|jsx|css)/g) || []
+
+// 3. Listar arquivos permitidos
+const arquivosPermitidos = [
+  ...arquivosMencionados,
+  // Arquivos relacionados à task
+]
+
+// 4. Listar arquivos proibidos (se necessário)
+const arquivosProibidos = [
+  // Arquivos que outros agentes estão usando
+  "src/routes.ts",  // task-12
+  "src/controllers.ts",  // task-13
+  // Arquivos críticos
+  "src/main.ts",
+  "src/config.ts"
+]
+
+// 5. Adicionar ao prompt
+promptParaGemini += `
+## 📁 ARQUIVOS PERMITIDOS:
+${arquivosPermitidos.map(f => `- ${f}`).join('\n')}
+
+## 🚫 ARQUIVOS PROIBIDOS:
+${arquivosProibidos.map(f => `- ${f}`).join('\n')}
+`
+```
+
+### Exemplo Prático: Três Agentes em Paralelo
+
+**Cenário**: Sistema de Autenticação com 3 agentes trabalhando simultaneamente
+
+```javascript
+// Agent A - task-10: Models e Services
+const promptAgentA = `
+# Task: Implementar Models e Services
+
+## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
+- src/auth/models/user.ts
+- src/auth/models/session.ts
+- src/auth/services/auth.service.ts
+- src/auth/services/token.service.ts
+
+## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
+- src/auth/routes/ (Agent B - task-12)
+- src/auth/controllers/ (Agent C - task-13)
+- src/main.ts (CRÍTICO)
+`
+```
+
+```javascript
+// Agent B - task-12: Routes
+const promptAgentB = `
+# Task: Implementar Routes
+
+## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
+- src/auth/routes/auth.routes.ts
+- src/auth/routes/user.routes.ts
+
+## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
+- src/auth/models/ (Agent A - task-10)
+- src/auth/services/ (Agent A - task-10)
+- src/auth/controllers/ (Agent C - task-13)
+- src/main.ts (CRÍTICO)
+`
+```
+
+```javascript
+// Agent C - task-13: Controllers
+const promptAgentC = `
+# Task: Implementar Controllers
+
+## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
+- src/auth/controllers/auth.controller.ts
+- src/auth/controllers/user.controller.ts
+
+## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
+- src/auth/models/ (Agent A - task-10)
+- src/auth/services/ (Agent A - task-10)
+- src/auth/routes/ (Agent B - task-12)
+- src/main.ts (CRÍTICO)
+`
+```
+
+**Resultado**: Três agentes trabalham simultaneamente SEM conflitos!
+
+### Regra de Ouro
+
+**SEMPRE que delegar para Gemini:**
+
+1. ✅ **Identificar** quais arquivos a task precisa modificar
+2. ✅ **Listar** em "ARQUIVOS PERMITIDOS"
+3. ✅ **Verificar** se há outras tasks simultâneas
+4. ✅ **Listar** arquivos de outras tasks em "ARQUIVOS PROIBIDOS"
+5. ✅ **Proteger** arquivos críticos (main.ts, config)
+
+**NUNCA delegue sem especificar arquivos!**
+
+---
+
 ## 🚨 Verificação e Cobrança
 
 ### Se Gemini NÃO atualizou ao assumir:
