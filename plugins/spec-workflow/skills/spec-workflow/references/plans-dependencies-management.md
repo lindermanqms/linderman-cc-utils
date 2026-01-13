@@ -9,14 +9,18 @@ Guia completo para usar Plans e Dependencies no servidor MCP Backlog.md.
 - **Plans**: Documentar a estratégia de implementação DENTRO da task
 - **Dependencies**: Gerenciar dependências entre tasks com validação automática
 
-## 🔧 Plan (Estratégia de Implementação)
+## 🔧 Plan (Spec da Task)
 
 ### O que é um Plan?
 
-Um **Plan** é um campo de texto que contém a abordagem detalhada de como implementar uma task. É diferente de uma Spec:
+Um **Plan** é um campo de texto que contém a abordagem detalhada de como implementar uma task. **O Plan É a Spec da task:**
 
-- **Spec**: Documento separado (`.backlog`) com requisitos e ACs
-- **Plan**: Campo EMBUTIDO na task com estratégia de implementação
+- **Spec (Plan)**: Campo `plan` da task com estratégia de implementação
+- **Documentos**: Artefatos permanentes (`.backlog`) em `docs/standards/` (constituição, padrões)
+
+**⚠️ DISTINÇÃO CRÍTICA:**
+- **Specs** são Plans (campos `plan` das tasks) - **NÃO são arquivos separados**
+- **Documentos** são artefatos permanentes do projeto - constituicao.backlog, padroes-codigo.backlog, etc.
 
 ### Criar Plan durante Criação da Task
 

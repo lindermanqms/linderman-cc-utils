@@ -42,7 +42,7 @@ search_nodes({ query: "{{feature-name}} patterns" })
 
 ### Fase 2: Criar Tarefa PRINCIPAL (Macro)
 
-A tarefa principal serve como o "guarda-chuva" para o trabalho. Sua descrição deve ser sucinta e apontar para a Spec.
+A tarefa principal serve como o "guarda-chuva" para o trabalho. O campo `plan` contém a Spec (estratégia de implementação).
 
 ```javascript
 // Criar tarefa macro
@@ -66,8 +66,21 @@ const mainTask = backlog_task_create({
 1. {{Resumo Fase 1}}
 2. {{Resumo Fase 2}}
 3. {{Resumo Fase 3}}
-  `,
-  description: "{{Descrição sucinta de 1-2 linhas}}.\n\n📄 **Spec detalhada:** specs/SPEC-{{ID}}-{{slug}}.backlog"
+
+## Detalhes Técnicos
+
+### Arquitetura
+{{Descrição da arquitetura proposta}}
+
+### APIs / Componentes
+{{Lista de APIs ou componentes a serem criados}}
+
+### Passos de Implementação
+1. {{Passo 1 com detalhes}}
+2. {{Passo 2 com detalhes}}
+3. {{Passo 3 com detalhes}}
+`,
+  description: "{{Descrição sucinta de 1-2 linhas}}.\n\n📋 **Spec completa**: Ver campo 'plan' acima."
 })
 // Resultado esperado: task-{{ID}}
 ```
@@ -386,69 +399,27 @@ backlog_task_create({
 })
 ```
 
-### Fase 4: Criar Spec Document (O "Como")
+### 📝 NOTA IMPORTANTE: Specs e Documentos
 
-**CRÍTICO**: Usar extensão **`.backlog`** (OBRIGATÓRIA). A Spec contém o detalhamento técnico completo que não cabe nas tasks.
+**⚠️ DISTINÇÃO CRÍTICA:**
 
-```javascript
-backlog_doc_create({
-  title: "SPEC-{{ID}}: {{feature-name}}",
-  type: "spec",
-  path: "specs/SPEC-{{ID}}-{{slug}}.backlog", // EXTENSÃO .backlog OBRIGATÓRIA
-  labels: ["specification"],
-  content: `--- 
-spec_id: SPEC-{{ID}}
-feature: {{feature-name}}
-related_task: task-{{ID}}
-status: draft
-version: 1.0
-author: Claude
-created_date: {{timestamp}}
----
+**Specs** = São os **PLANOS** das tasks (campo `plan` das tasks)
+- Criados na **Fase 2.5** (campo `plan` da task)
+- Contêm estratégia de implementação
+- **NÃO são arquivos .backlog separados**
 
-# SPEC-{{ID}}: {{feature-name}}
+**Documentos** = Artefatos PERMANENTES do projeto
+- Criados com `backlog_doc_create({ path: "docs/standards/..." })`
+- Exemplo: constituicao.backlog, padroes-codigo.backlog
+- São constituição, guias, padrões estáticos
 
-**Status:** 📝 Draft | **Task:** task-{{ID}}
+### Fase 4: Validação e Vínculo Final
 
-## 1. Contexto e Objetivos
-{{Descrição detalhada do porquê e para quê}}
-
-## 2. Arquitetura e Design
-{{Componentes, fluxos de dados, diagramas textuais}}
-
-## 3. Detalhamento Técnico
-### APIs / Endpoints
-{{Métodos, rotas, payloads de exemplo}}
-
-### Modelos de Dados
-{{Entidades, schemas, relacionamentos}}
-
-## 4. Acceptance Criteria (Espelhado)
-- [ ] {{AC 1}}
-- [ ] {{AC 2}}
-
-## 5. Casos de Borda e Erros
-| Cenário | Resposta Esperada |
-|---------|-------------------|
-| {{Ex}}  | {{Ex}}            |
-
-## 6. Estratégia de Testes
-{{Unitários, integração, E2E}}
-
-## 7. Referências
-- Constituição: backlog/docs/standards/constituicao.backlog
-- ADRs: {{links}}
-`
-})
-```
-
-### Fase 5: Validação e Vínculo Final
-
-**Atualizar a Tarefa Principal** para garantir que todos os links estão corretos:
+**Atualizar a Tarefa Principal** para garantir que a Spec (plan) está completa:
 
 ```javascript
 backlog_task_update("task-{{ID}}", {
-  notes: "📄 Spec oficial: specs/SPEC-{{ID}}-{{slug}}.backlog\n\n🛠️ Esta task é composta por {{N}} subtasks detalhando o passo-a-passo."
+  notes: "🛠️ Esta task é composta por {{N}} subtasks detalhando o passo-a-passo.\n\n📋 **Spec completa**: Ver campo 'plan' acima para a estratégia de implementação detalhada."
 })
 ```
 
@@ -456,11 +427,11 @@ backlog_task_update("task-{{ID}}", {
 
 ## Regras de Ouro do Planejamento
 
-1. **Task vs Spec**: A Task diz "O QUE" fazer (trabalho). A Spec diz "COMO" fazer (projeto).
+1. **Task vs Plan (Spec)**: A Task diz "O QUE" fazer (trabalho). O Plan (campo `plan`) diz "COMO" fazer (estratégia de implementação).
 2. **Atomicidade**: Subtasks devem ser pequenas o suficiente para serem concluídas em poucas horas.
 3. **Link Parent**: SEMPRE preencher o campo `parent` nas subtasks.
-4. **Extensão .backlog**: NUNCA usar `.md` para Specs ou Documentos de padrões. Rejeitar se solicitado.
-5. **IDs Sincronizados**: SPEC-010 deve referenciar a task-010.
+4. **Documentos vs Specs**: Documentos são artefatos permanentes (`.backlog` em `docs/standards/`). Specs são Plans das tasks (campo `plan`).
+5. **Specs em Plans**: Specs NUNCA são arquivos separados. Sempre usar o campo `plan` da task.
 6. **Dependências**: Se o Passo B depende do Passo A, use o campo `dependencies` na subtask B.
 
 ## Exemplo de Estrutura de Subtasks (Autenticação)

@@ -161,21 +161,31 @@ if (task.plan) {
 }
 ```
 
-### Fase 4: Leitura da Especificação (Spec)
+### Fase 4: Leitura do Plan (Spec)
 
-**1. Identificar Spec vinculada:**
+**⚠️ IMPORTANTE: Specs são os PLANS das tasks (campo `plan`)**
 
 ```javascript
-// Buscar spec (.backlog) na main task ou subtask
-const specMatch = task.description?.match(/specs\/(SPEC-\d+-[\w-]+\.backlog)/) ||
-                  task.notes?.match(/specs\/(SPEC-\d+-[\w-]+\.backlog)/)
+// A Spec está no CAMPO PLAN da task (não é arquivo separado)
+let planContent = task.plan || ""
 
-// Se for subtask, buscar na parent task
-if (!specMatch && task.parent) {
+// Se for subtask sem plan próprio, buscar na parent task
+if (!planContent && task.parent) {
   const parentTask = backlog_task_get(task.parent)
-  // ... buscar spec no parent ...
+  planContent = parentTask.plan || ""
+}
+
+// Se ainda não encontrou, avisar
+if (!planContent) {
+  console.warn("⚠️ Esta task não possui um Plan (Spec) no campo 'plan'.")
+  console.warn("   Recomendado criar um Plan antes de implementar.")
 }
 ```
+
+**NOTA: Distinção entre Specs e Documentos**
+
+- **Spec (Plan)** = Campo `plan` da task (estratégia de implementação)
+- **Documentos** = Artefatos permanentes em `docs/standards/*.backlog` (constituição, padrões)
 
 ### Fase 5: Atualizar Status para "In Progress"
 
@@ -238,7 +248,7 @@ subtasks.forEach((sub, index) => {
     priority: task.priority,
     labels: task.labels,
     acceptance_criteria: [
-      `[ ] Implementação conforme spec`,
+      `[ ] Implementação conforme Plan (Spec)`,
       `[ ] Testes passando`,
       `[ ] Code review aprovado`
     ]
@@ -276,19 +286,19 @@ Após subdivisão (ou verificação de que não é necessária):
 **NUNCA** faça isso:
 ```javascript
 // ❌ ERRADO - Resumo vago
-`Implemente a subtask ${task.id} seguindo a spec ${specPath}.`
+`Implemente a subtask ${task.id}.`
 ```
 
 **SEMPRE** faça isso:
 ```javascript
 // ✅ CORRETO - Contexto COMPLETO
-const specContent = await fs.readFile(specPath, 'utf-8')
+const planContent = task.plan || parentTask.plan || ""
 
 const promptParaAgente = `
 # Task: ${task.title}
 
-## Spec COMPLETA (CONTEÚDO INTEGRAL):
-${specContent}
+## Plan (Spec) COMPLETO:
+${planContent}
 
 ## Todos os Acceptance Criteria:
 ${task.acceptance_criteria.map((ac, i) => `${i + 1}. ${ac}`).join('\n')}
@@ -300,7 +310,7 @@ ${projectContext}
 ${memoryPatterns}
 
 ## Implementar:
-- Seguir 100% a spec acima
+- Seguir 100% do Plan acima
 - NÃO resumir requisitos
 - NÃO omitir detalhes
 - Validar TODOS os ACs antes de finalizar
@@ -312,7 +322,7 @@ ${memoryPatterns}
 - ✅ Subagente tem TODOS os requisitos
 - ✅ Nada é perdido em resumos
 - ✅ ACs podem ser validados corretamente
-- ✅ Implementação segue spec exatamente
+- ✅ Implementação segue o Plan (Spec) exatamente
 
 ### Fase 8: Atualizar Notas Progressivamente
 

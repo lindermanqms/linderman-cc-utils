@@ -189,12 +189,17 @@ Este projeto utiliza o plugin **spec-workflow** para gerenciamento de projeto vi
 ### Filosofia Spec-Driven Development
 
 **Princípios Fundamentais:**
-1. **Spec-First**: Toda feature DEVE ter uma Spec antes de implementação
+1. **Plan-First**: Toda feature DEVE ter um Plan (Spec) antes de implementação
 2. **AC Obrigatório**: Toda task DEVE ter Acceptance Criteria verificáveis
 3. **MCP-Only**: NUNCA editar arquivos `.backlog` manualmente
-4. **Extensão .backlog**: Specs e documentos DEVEM usar extensão `.backlog` (não `.md`)
-5. **Revisão Obrigatória**: Código DEVE passar por `/spec-review` antes de `/spec-retro`
-6. **Memória Ativa**: Aprendizados críticos DEVEM ser salvos no Basic Memory
+4. **Specs são Plans**: Specs são o campo `plan` das tasks (NÃO são arquivos `.backlog` separados)
+5. **Documentos são .backlog**: Documentos permanentes (constituição, padrões) usam extensão `.backlog`
+6. **Revisão Obrigatória**: Código DEVE passar por `/spec-review` antes de `/spec-retro`
+7. **Memória Ativa**: Aprendizados críticos DEVEM ser salvos no Basic Memory
+
+**⚠️ DISTINÇÃO CRÍTICA:**
+- **Specs (Plans)** = Campo `plan` das tasks (estratégia de implementação)
+- **Documentos** = Artefatos permanentes em `docs/standards/*.backlog` (constituição, padrões)
 
 ### Integração com Backlog.md MCP
 
@@ -215,10 +220,10 @@ backlog_task_create({
 })
 ```
 
-**Specs com extensão .backlog** (OBRIGATÓRIA):
-- Localização: `specs/SPEC-{ID}-{slug}.backlog`
-- Formato: Markdown com frontmatter YAML
-- Conteúdo: Requisitos, arquitetura, ACs, plano técnico
+**Specs (Plans das Tasks):**
+- **Localização**: Campo `plan` das tasks (NÃO são arquivos separados)
+- **Formato**: Markdown com estratégia de implementação
+- **Conteúdo**: Requisitos, arquitetura, passos de implementação, riscos
 
 **Documentos de Padrões** (Constituição):
 - Localização: `backlog/docs/standards/*.backlog`
@@ -245,7 +250,7 @@ backlog_task_create({
 
 #### Visualização
 - `/spec-board` - Kanban interativo com estatísticas
-- `/spec-search` - Busca fuzzy em tasks/specs/docs/ADRs
+- `/spec-search` - Busca fuzzy em tasks/docs/ADRs (plans são campo `plan` das tasks)
 
 ### Estrutura de Arquivos
 
@@ -256,13 +261,12 @@ linderman-cc-utils/
 │   ├── config.yml                # Statuses, labels, milestones
 │   ├── task-001 - Feature X.md
 │   ├── task-002 - Bug Y.md
-│   ├── specs/
-│   │   ├── SPEC-001-auth.backlog      # ← .backlog OBRIGATÓRIA
-│   │   └── SPEC-002-api.backlog
 │   └── docs/
 │       └── standards/
-│           ├── constituicao.backlog    # ← .backlog OBRIGATÓRIA
-│           └── padroes-codigo.backlog
+│           ├── constituicao.backlog    # ← Documento permanente
+│           ├── padroes-codigo.backlog  # ← Documento permanente
+│           ├── padroes-testes.backlog  # ← Documento permanente
+│           └── workflow-desenvolvimento.backlog  # ← Documento permanente
 └── plugins/
     └── spec-workflow/
         └── commands/                   # v2.0 - Redesign completo
@@ -273,11 +277,12 @@ linderman-cc-utils/
 Quando trabalhando neste projeto:
 
 1. **NUNCA** editar arquivos `.backlog` manualmente - usar sempre MCP tools
-2. **SEMPRE** usar extensão `.backlog` para specs e docs de padrões
-3. **OBRIGATÓRIO** validar CLI `backlog` está instalado antes de usar comandos
-4. **PROIBIDO** aprovar task sem TODOS os ACs marcados como `[x]`
-5. **OBRIGATÓRIO** passar por `/spec-review` antes de `/spec-retro`
-6. **PROIBIDO** deletar tasks - arquivar via `backlog_task_archive`
+2. **Specs são Plans**: Specs são o campo `plan` das tasks (NUNCA são arquivos `.backlog` separados)
+3. **Documentos são .backlog**: Apenas documentos permanentes (constituição, padrões) usam `.backlog`
+4. **OBRIGATÓRIO** validar CLI `backlog` está instalado antes de usar comandos
+5. **PROIBIDO** aprovar task sem TODOS os ACs marcados como `[x]`
+6. **OBRIGATÓRIO** passar por `/spec-review` antes de `/spec-retro`
+7. **PROIBIDO** deletar tasks - arquivar via `backlog_task_archive`
 
 ### Ferramentas MCP Disponíveis
 
