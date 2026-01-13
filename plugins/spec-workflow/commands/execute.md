@@ -218,9 +218,92 @@ backlog_task_update(task.id, {
 })
 ```
 
-### Fase 8: Marcar ACs como Concluídos
+### Fase 8: Marcar ACs como Concluídos (OBRIGATÓRIO)
 
-À medida que os critérios de aceite de cada subtask são atendidos, marque-os como concluídos.
+#### ⚠️ USE `task_edit` PARA MARCAR ACS INDIVIDUAIS ⚠️
+
+**NUNCA** edite o campo `acceptance_criteria` completo. **SEMPRE** use `backlog_task_edit` para marcar ACs individualmente.
+
+**Marcar AC específico como concluído:**
+```javascript
+// Durante implementação, marcar AC #1 como [x]
+backlog_task_edit(task.id, {
+  check_acceptance_criteria: [1]  // Marca AC #1 como [x]
+})
+```
+
+**Marcar múltiplos ACs:**
+```javascript
+// Marcar ACs #1 e #3 como [x]
+backlog_task_edit(task.id, {
+  check_acceptance_criteria: [1, 3]
+})
+```
+
+**Desmarcar AC (se necessário):**
+```javascript
+// Se precisar reabrir um AC
+backlog_task_edit(task.id, {
+  uncheck_acceptance_criteria: [2]  // Marca AC #2 como [ ]
+})
+```
+
+**Adicionar novo AC durante execução:**
+```javascript
+// Se descobrir requisito faltando
+backlog_task_edit(task.id, {
+  add_acceptance_criteria: ["[ ] Novo AC descoberto durante implementação"]
+})
+```
+
+**Remover AC inválido:**
+```javascript
+// Se AC estiver duplicado ou incorreto
+backlog_task_edit(task.id, {
+  remove_acceptance_criteria: [5]  // Remove AC #5
+})
+```
+
+**Adicionar dependências:**
+```javascript
+// Se descobrir que precisa de outra task
+backlog_task_edit(task.id, {
+  add_dependencies: ["task-20", "task-25"]
+})
+```
+
+#### Exemplo Prático de Marcação de ACs
+
+```javascript
+// Implementando feature de autenticação
+
+// 1. Após criar models User e Session
+backlog_task_edit(task.id, {
+  check_acceptance_criteria: [1]
+})
+
+// 2. Após implementar JWT service
+backlog_task_edit(task.id, {
+  check_acceptance_criteria: [2]
+})
+
+// 3. Após criar middleware
+backlog_task_edit(task.id, {
+  check_acceptance_criteria: [3]
+})
+
+// 4. Verificar progresso
+const updatedTask = backlog_task_get(task.id)
+const completed = updatedTask.acceptance_criteria.filter(ac => ac.startsWith("[x]")).length
+console.log(`Progresso: ${completed}/${updatedTask.acceptance_criteria.length} ACs completados`)
+```
+
+#### Por que `task_edit` é OBRIGATÓRIO?
+
+- ✅ **Rastreio preciso** - Sabe exatamente qual AC foi completado
+- ✅ **Sem conflitos** - Evita sobrescrever ACs de outras sessões
+- ✅ **Validação fácil** - `/spec-review` pode contar ACs [x] automaticamente
+- ✅ **Histórico preservado** - Notas incrementais mostram evolução
 
 ### Fase 9: Finalização da Subtask
 

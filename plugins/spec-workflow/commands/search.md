@@ -458,6 +458,71 @@ Lista tasks críticas pendentes (busca vazia com filtros).
 
 Lista TUDO relacionado ao milestone v1.0.
 
+## Busca via MCP (Alternativa à CLI)
+
+### Busca em Documentos via MCP
+
+**O MCP `document_search` oferece busca fuzzy especializada em documentos:**
+
+```javascript
+// Buscar specs contendo "autenticação"
+const docResults = await backlog_document_search({
+  query: "autenticação",
+  type: "spec"  // Opcional: spec, guide, standard
+})
+
+// Resultado:
+// [
+//   { id: "SPEC-003", title: "...", path: "specs/SPEC-003...", score: 0.95 },
+//   { id: "SPEC-015", title: "...", path: "specs/SPEC-015...", score: 0.72 }
+// ]
+```
+
+**Comparativo: CLI vs MCP**
+
+| Funcionalidade | CLI `backlog search` | MCP `document_search` |
+|--------------|----------------------|----------------------|
+| **Alcance** | Tasks + Docs + ADRs | Apenas Documentos |
+| **Busca** | Fuzzy (terminal) | Fuzzy (MCP) |
+| **Filtros** | Status, priority, etc. | Type (spec, guide, standard) |
+| **Output** | JSON ou texto | JSON estruturado |
+| **Performance** | Índice global | Índice de documentos |
+| **Uso ideal** | Busca geral | Busca específica de docs |
+
+**Quando usar `document_search`:**
+- ✅ Busca específica em specs, guias ou padrões
+- ✅ Integração com comandos como `/spec-align` e `/spec-plan`
+- ✅ Validação de duplicação antes de criar novo padrão
+- ✅ Exploração de documentação técnica
+
+### Exemplo de Integração com `/spec-align`
+
+```javascript
+// Antes de criar novo padrão, verificar se já existe
+const existing = await backlog_document_search({
+  query: "padrões de código",
+  type: "standard"
+})
+
+if (existing.length > 0) {
+  console.log(`⚠️ Padrão já existe: ${existing[0].id}`)
+  console.log(`   Path: ${existing[0].path}`)
+  console.log("\nDeseja:")
+  console.log("1. Ver o padrão existente")
+  console.log("2. Criar um novo mesmo assim")
+  console.log("3. Atualizar o existente")
+
+  // Aguardar decisão do usuário
+} else {
+  // Prosseguir com criação
+  await backlog_doc_create({
+    title: "Padrões de Código",
+    type: "standard",
+    content: "..."
+  })
+}
+```
+
 ## Integração com Basic Memory (Opcional)
 
 **Após busca, salvar consultas frequentes como notas de busca rápida:**

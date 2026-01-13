@@ -70,7 +70,37 @@ console.log("   - Build está funcionando")
 console.log("\n✅ Pré-requisitos validados! Prosseguindo com fechamento...")
 ```
 
-### Fase 2: Atualizar Task com Resumo Final (NOVO)
+### Fase 2: Escolher Método de Finalização
+
+#### ⚠️ `task_update` vs `task_complete` ⚠️
+
+**Duas opções para finalizar a task:**
+
+**Opção 1: `task_update` + status "Done"** (padrão atual)
+```javascript
+// Apenas muda status para "Done"
+backlog_task_update(task.id, {
+  status: "Done",
+  notes: task.notes + resumoFinal
+})
+```
+
+**Opção 2: `task_complete`** (NOVO - recomendado)
+```javascript
+// Muda status para "Done" E move para backlog/completed/
+backlog_task_complete(task.id)
+
+// Depois adicionar resumo
+backlog_task_update(task.id, {
+  notes: task.notes + resumoFinal
+})
+```
+
+**Quando usar cada opção:**
+- ✅ **Use `task_complete`** para tasks concluídas que quer arquivar
+- ✅ **Use `task_update`** para tasks que quer manter visíveis no board
+
+### Fase 3: Atualizar Task com Resumo Final
 
 **Adicionar resumo estruturado no campo `notes`:**
 

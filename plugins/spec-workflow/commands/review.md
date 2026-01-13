@@ -103,32 +103,69 @@ if (task.status !== "In Review") {
 }
 ```
 
-#### 2.2 Validação Automática de ACs (NOVO)
+#### 2.2 Validação Automática de ACs (OBRIGATÓRIO)
 
 **CRÍTICO**: Verificar que TODOS os ACs estão marcados como concluídos:
 
 ```javascript
+// Contar ACs marcados vs pendentes
 const uncheckedACs = task.acceptance_criteria.filter(ac => ac.startsWith("[ ]"))
 const checkedACs = task.acceptance_criteria.filter(ac => ac.startsWith("[x]"))
 
-console.log(`📋 Acceptance Criteria: ${checkedACs.length}/${task.acceptance_criteria.length} concluídos`)
+const totalACs = task.acceptance_criteria.length
+const completionRate = ((checkedACs.length / totalACs) * 100).toFixed(0)
 
+console.log(`\n📊 Progresso dos Acceptance Criteria: ${checkedACs.length}/${totalACs} (${completionRate}%)`)
+console.log(`   ✅ Concluídos: ${checkedACs.length}`)
+console.log(`   ⏳ Pendentes: ${uncheckedACs.length}`)
+
+// SE houver ACs pendentes, BLOQUEAR revisão
 if (uncheckedACs.length > 0) {
-  console.log("\n❌ ACs NÃO concluídos:")
-  uncheckedACs.forEach(ac => console.log(`   ${ac}`))
+  console.log("\n❌ BLOCKING ERROR: Acceptance Criteria INCOMPLETOS")
+  console.log("\nACs pendentes:")
+  uncheckedACs.forEach((ac, index) => {
+    const acNumber = task.acceptance_criteria.indexOf(ac) + 1
+    console.log(`   ${acNumber}. ${ac}`)
+  })
 
-  console.log("\n🔧 Para marcar ACs como concluídos:")
-  console.log(`   backlog task edit ${task.id} --check-ac "texto do AC"`)
+  console.log("\n🔧 Como marcar ACs como concluídos:")
+  console.log(`   backlog_task_edit("${task.id}", {`)
+  console.log(`     check_acceptance_criteria: [1, 3, 5]`)
+  console.log(`   })`)
+  console.log("\n💡 Dica: Use o número do AC (1-indexed) para marcá-lo como [x]")
 
-  // BLOQUEAR revisão se houver ACs pendentes
+  // RETORNAR com status REFUSED
   return {
     status: "REFUSED",
-    reason: "Acceptance Criteria incompletos",
-    uncheckedCount: uncheckedACs.length
+    reason: `Acceptance Criteria incompletos (${checkedACs.length}/${totalACs})`,
+    completion_rate: completionRate,
+    unchecked_acs: uncheckedACs,
+    recommendation: "Marcar todos os ACs como [x] antes de revisar"
   }
 }
 
-console.log("✅ Todos os ACs estão marcados como concluídos!")
+// SE todos os ACs estão completos, continuar
+console.log("\n✅ VALIDATION PASSED: Todos os ACs estão marcados como [x]")
+console.log("   Continuando com revisão técnica...")
+```
+
+**Exemplo de uso prático:**
+
+```javascript
+// Durante /spec-execute, implementar e marcar ACs um por um
+backlog_task_edit("task-10", {
+  check_acceptance_criteria: [1]  // Marca AC #1 como [x]
+})
+
+// Verificar progresso antes de chamar /spec-review
+const task = backlog_task_get("task-10")
+const done = task.acceptance_criteria.filter(ac => ac.startsWith("[x]")).length
+console.log(`Progresso: ${done}/${task.acceptance_criteria.length} ACs`)
+
+// SE progresso = 100%, chamar /spec-review
+if (done === task.acceptance_criteria.length) {
+  console.log("✅ Todos os ACs completos! Pronto para /spec-review")
+}
 ```
 
 #### 2.3 Verificação de Código
