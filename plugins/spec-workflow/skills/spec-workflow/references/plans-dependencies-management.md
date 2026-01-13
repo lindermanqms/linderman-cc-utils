@@ -597,6 +597,174 @@ const subtasks = [
 ]
 ```
 
+## 🚨 Erros Comuns do MCP
+
+### Erro 1: Usar `parentTaskId` em vez de `parent`
+
+**Problema:**
+```
+Error: Validation failed: Unknown field 'parentTaskId' is not allowed
+```
+
+**Causa:** Tentar usar `parentTaskId` ao invés do campo correto `parent`.
+
+**❌ ERRADO:**
+```javascript
+backlog_task_edit("task-23", {
+  parentTaskId: "task-28"  // Campo INCORRETO
+})
+```
+
+**✅ CORRETO:**
+```javascript
+// Para criar subtask com parent:
+backlog_task_create({
+  title: "Subtask título",
+  parent: "task-28",  // ← Campo CORRETO
+  type: "subtask"
+})
+
+// Para editar parent de task existente:
+backlog_task_edit("task-23", {
+  parent: "task-28"  // ← Campo CORRETO
+})
+```
+
+**Regra:** O campo correto é SEMPRE `parent`, nunca `parentTaskId`, `parent_task`, `parentTask` ou qualquer variação.
+
+---
+
+### Erro 2: Esquecer de converter `dependencies` para array
+
+**Problema:**
+```
+Error: Dependencies must be an array
+```
+
+**Causa:** Passar string ao invés de array.
+
+**❌ ERRADO:**
+```javascript
+backlog_task_edit("task-15", {
+  dependencies: "task-20"  // String INCORRETA
+})
+```
+
+**✅ CORRETO:**
+```javascript
+backlog_task_edit("task-15", {
+  add_dependencies: ["task-20", "task-25"]  // Array CORRETO
+})
+```
+
+---
+
+### Erro 3: Usar `backlog_task_update` para modificar campos estruturais
+
+**Problema:** Alguns campos exigem `backlog_task_edit` com operações específicas.
+
+**Causa:** Usar tool errado para o campo.
+
+**❌ ERRADO:**
+```javascript
+// Para ACs, NÃO usar update direto
+backlog_task_update("task-15", {
+  acceptance_criteria: ["[ ] Novo AC"]  // Pode não funcionar
+})
+```
+
+**✅ CORRETO:**
+```javascript
+// Para ACs, usar edit com operações específicas
+backlog_task_edit("task-15", {
+  add_acceptance_criteria: ["[ ] Novo AC"]
+})
+
+// Para remover:
+backlog_task_edit("task-15", {
+  remove_acceptance_criteria: [2]  // Remove AC no índice 2
+})
+
+// Para marcar como concluído:
+backlog_task_edit("task-15", {
+  check_acceptance_criteria: [1, 3, 5]  // Marca ACs 1, 3, 5 como [x]
+})
+```
+
+---
+
+### Erro 4: Tentar criar task com `id` pré-definido
+
+**Problema:** O campo `id` é gerado automaticamente pelo Backlog.md.
+
+**❌ ERRADO:**
+```javascript
+backlog_task_create({
+  id: "task-100",  // IGNORADO - id é auto-gerado
+  title: "Título"
+})
+```
+
+**✅ CORRETO:**
+```javascript
+const task = backlog_task_create({
+  title: "Título"
+  // Não especificar id - será gerado automaticamente
+})
+
+// Usar o id retornado:
+console.log(task.id)  // "task-23" (por exemplo)
+```
+
+---
+
+### Erro 5: Confundir Spec (Plan) com Documento
+
+**Problema:** Tentar criar Spec como arquivo separado.
+
+**❌ ERRADO:**
+```javascript
+// Specs NÃO são arquivos
+backlog_doc_create({
+  title: "SPEC-001",
+  path: "specs/SPEC-001.backlog",  // ERRADO
+  content: "..."
+})
+```
+
+**✅ CORRETO:**
+```javascript
+// Specs são o campo `plan` das tasks
+backlog_task_create({
+  title: "Feature",
+  plan: `
+## Estratégia de Implementação
+
+### Passo 1: ...
+`
+})
+
+// Documentos são permanentes (constituição, padrões)
+backlog_doc_create({
+  title: "Constituição do Projeto",
+  path: "docs/standards/constituicao.backlog",  // CORRETO
+  content: "..."
+})
+```
+
+---
+
+## 📋 Checklist de Validação MCP
+
+Antes de executar comandos MCP, verificar:
+
+- [ ] Campo `parent` (não `parentTaskId`)
+- [ ] `dependencies` é array (não string)
+- [ ] `acceptance_criteria` usa operações específicas (`add/remove/check`)
+- [ ] Não especificar `id` na criação (é auto-gerado)
+- [ ] Spec = campo `plan` (não arquivo separado)
+- [ ] Documentos = `.backlog` em `docs/standards/`
+
 ## 📚 Referências
 
 - **Backlog.md MCP**: https://github.com/MrLesk/Backlog.md
