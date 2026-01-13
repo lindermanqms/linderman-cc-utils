@@ -1,7 +1,7 @@
 ---
 name: gemini-orchestrator
-description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", "delegate.sh", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models. Scripts are located at plugins/gemini-orchestrator/scripts/ and are executed directly from their installation location (NOT copied to project). Templates are in plugins/gemini-orchestrator/templates/ and must be copied to .claude/gemini-orchestrator/prompts/ during setup.
-version: 2.4.0
+description: This skill should be used when the user wants to "delegate to gemini", "use gemini for", "let gemini handle", "orchestrate with gemini", mentions "gemini-cli", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models. Executes directly via gemini CLI with --approval-mode yolo for headless automation.
+version: 2.6.0
 ---
 
 # Gemini Orchestrator Skill
@@ -13,7 +13,7 @@ Enter **Orchestration Mode** to delegate tasks to Gemini AI models. This skill t
 - **gemini-3-flash-preview** for code implementation
 - **Orchestrator (Sonnet)** for final validation and project management
 
-**Recommended workflow**: Use `delegate.sh` script for reliable, organized delegations.
+**Recommended workflow**: Execute directly with `gemini --approval-mode yolo -p "$(cat prompt.txt)"`
 
 ---
 
@@ -40,7 +40,7 @@ Enter **Orchestration Mode** to delegate tasks to Gemini AI models. This skill t
 - "Don't delegate, do it yourself" ou
 - "Implement this directly, don't use gemini"
 
-**COMPORTAMENTO PADRÃO**: SEMPRE delegue TUDO via `delegate.sh`
+**COMPORTAMENTO PADRÃO**: SEMPRE delegue TUDO via `gemini --approval-mode yolo`
 
 ### Quando delegar?
 
@@ -64,38 +64,68 @@ Enter **Orchestration Mode** to delegate tasks to Gemini AI models. This skill t
 
 ### ⚠️ SEMPRE use esta estrutura ⚠️
 
-**NUNCA** execute `gemini -p "seu prompt aqui"` diretamente!
+**NUNCA** execute `gemini -p "seu prompt aqui"` com prompt inline!
 
 **SEMPRE** siga este fluxo:
 
-#### 1️⃣ Criar prompt a partir de template
+#### 1️⃣ Criar arquivo de prompt
 
 ```bash
-# Copiar template
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
-   .claude/gemini-orchestrator/prompts/task-ID-descricao.txt
+# Criar estrutura de diretórios
+mkdir -p .claude/gemini-orchestrator/prompts
+mkdir -p .claude/gemini-orchestrator/reports
+
+# Criar arquivo de prompt
+cat > .claude/gemini-orchestrator/prompts/task-ID-descricao.txt << 'EOF'
+# Task: [Título da Task]
+
+## 📝 Project Context
+[Colar CLAUDE.md ou arquitetura relevante]
+
+## 🧠 Memory Context
+[Padrões do Basic Memory via search_nodes]
+
+## 🎯 Task Description
+[Requisitos detalhados]
+
+## ✅ Acceptance Criteria
+- [ ] AC 1
+- [ ] AC 2
+
+## 🔧 Technical Requirements
+[Requisitos técnicos]
+
+## 📁 ARQUIVOS PERMITIDOS:
+- src/auth/models/user.ts
+- src/auth/services/auth.service.ts
+
+## 🚫 ARQUIVOS PROIBIDOS:
+- src/main.ts (CRÍTICO)
+EOF
 ```
 
-#### 2️⃣ Preencher TODAS as seções
-
-O template contém TODAS as seções necessárias:
-- 📝 **Project Context** - CLAUDE.md, arquitetura, padrões
-- 🧠 **Memory Context** - Padrões do Basic Memory (search_nodes)
-- 🎯 **Task Description** - Requisitos detalhados
-- ✅ **Acceptance Criteria** - Critérios verificáveis
-- 🔧 **Technical Requirements** - Requisitos técnicos
-
-#### 3️⃣ Executar com delegate.sh
+#### 2️⃣ Executar com gemini CLI (YOLO mode)
 
 ```bash
-./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .claude/gemini-orchestrator/prompts/task-ID-descricao.txt
+# Flash implementation (código)
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/flash-$TIMESTAMP.md"
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID-descricao.txt)" \
+  2>&1 | tee "$REPORT_FILE"
+
+# Pro planning (planejamento/design)
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/pro-$TIMESTAMP.md"
+gemini -m gemini-3-pro-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID-descricao.txt)" \
+  2>&1 | tee "$REPORT_FILE"
 ```
 
-#### 4️⃣ Validar resultados
+#### 3️⃣ Validar resultados
 
 ```bash
-# VOCÊ executa these (NÃO o agent)
+# VOCÊ executa estes (NÃO o agent)
 npm run build
 npm test
 npm start  # Para validação end-to-end
@@ -107,8 +137,6 @@ npm start  # Para validação end-to-end
 
 ### ⚠️ CRITICAL: Sempre use --approval-mode yolo ⚠️
 
-**O delegate.sh adiciona automaticamente --yolo. NÃO adicione manualmente.**
-
 **Por que --yolo é OBRIGATÓRIO?**
 
 - ✅ Auto-aprovação de ferramentas (sem interrupções)
@@ -116,186 +144,88 @@ npm start  # Para validação end-to-end
 - ✅ Agents podem instalar deps, rodar dev servers, executar testes
 - ✅ Workflow completo sem intervenção manual
 
-**Se delegate.sh falhar, use manual:**
+**Sempre usar no comando:**
 
 ```bash
-# Flash implementation
-TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
-REPORT_FILE=".claude/gemini-orchestrator/reports/flash-$TIMESTAMP.md"
 gemini -m gemini-3-flash-preview --approval-mode yolo \
-  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID.txt)" \
-  2>&1 | tee "$REPORT_FILE"
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID.txt)"
+```
 
-# Pro planning
-TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
-REPORT_FILE=".claude/gemini-orchestrator/reports/pro-$TIMESTAMP.md"
-gemini -m gemini-3-pro-preview \
-  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID.txt)" \
-  2>&1 | tee "$REPORT_FILE"
+**Alternativa curta (-y é alias para --approval-mode yolo):**
+
+```bash
+gemini -m gemini-3-flash-preview -y \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID.txt)"
 ```
 
 ---
 
-## 🚀 Workflow Recomendado: delegate.sh
+## 🚀 Workflow Recomendado: Execução Direta
 
-### Localização do Script
-
-```
-plugins/gemini-orchestrator/scripts/delegate.sh
-```
-
-**IMPORTANTE**: Scripts são **NÃO copiados** para o projeto. Eles são **executados diretamente** do local de instalação do plugin.
-
-**Por que esse design?**
-- ✅ **Única fonte de verdade** - Uma versão do delegate.sh em todos os projetos
-- ✅ **Atualizações automáticas** - Updates do plugin atualizam o script automaticamente
-- ✅ **Sem duplicação** - Não precisa copiar arquivos entre projetos
-- ✅ **Comportamento consistente** - Mesmo comportamento do script em todo lugar
-
-### Setup (Uma vez)
+### Pré-requisitos
 
 ```bash
-# 1. Verificar se o script existe
-ls -la plugins/gemini-orchestrator/scripts/delegate.sh
+# 1. Verificar se gemini CLI está instalado
+which gemini
 
 # 2. Criar estrutura de diretórios
 mkdir -p .claude/gemini-orchestrator/prompts
 mkdir -p .claude/gemini-orchestrator/reports
-
-# 3. Copiar templates
-cp plugins/gemini-orchestrator/templates/TEMPLATE-*.txt \
-   .claude/gemini-orchestrator/prompts/
-
-# 4. Verificar templates
-ls -la .claude/gemini-orchestrator/prompts/TEMPLATE-*.txt
 ```
 
 ### Processo de Delegação Padrão
 
-**Step 1: Criar prompt do template**
-```bash
-# Para implementação (Flash)
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
-   .claude/gemini-orchestrator/prompts/task-ID-descricao.txt
+**Step 1: Criar arquivo de prompt**
 
-# Para planejamento (Pro)
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-pro-planning.txt \
-   .claude/gemini-orchestrator/prompts/task-ID-design.txt
+```bash
+# Criar prompt file
+cat > .claude/gemini-orchestrator/prompts/task-ID-descricao.txt
 ```
 
 **Step 2: Editar prompt** - Preencher TODAS as seções:
-- Project Context (CLAUDE.md, arquitetura)
-- Memory Context (padrões do search_nodes)
-- Task Description (requisitos detalhados)
-- Acceptance Criteria (do Backlog.md se usando spec-workflow)
-- Technical Requirements
+- 📝 Project Context (CLAUDE.md, arquitetura)
+- 🧠 Memory Context (padrões do search_nodes)
+- 🎯 Task Description (requisitos detalhados)
+- ✅ Acceptance Criteria (do Backlog.md se usando spec-workflow)
+- 🔧 Technical Requirements
 - **📁 ARQUIVOS PERMITIDOS E PROIBIDOS (OBRIGATÓRIO se usando spec-workflow)**
 
-**Step 2.5: Especificar Arquivos Permitidos (OBRIGATÓRIO)**
+**Step 3: Executar com gemini CLI**
 
-**⚠️ CRÍTICO**: SEMPRE especificar quais arquivos o agente Gemini PODE e NÃO PODE mexer.
-
-**Por que é OBRIGATÓRIO:**
-- ✅ Evita conflitos quando múltiplos agentes trabalham em paralelo
-- ✅ Delimitação clara do escopo do agente
-- ✅ Protege arquivos críticos (main.ts, config)
-- ✅ Previne sobreposição de trabalho
-
-**Adicionar ao prompt:**
-
-```markdown
-## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
-- src/auth/models/user.ts
-- src/auth/services/auth.service.ts
-- src/auth/middleware/auth.middleware.ts
-
-## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
-- src/auth/routes/auth.routes.ts (outro agente está responsável)
-- src/auth/controllers/auth.controller.ts (outro agente está responsável)
-- src/main.ts (ARQUIVO CRÍTICO - proibido)
-
-## ⚠️ REGRA:
-1. MODIFICAR APENAS os arquivos listados em "ARQUIVOS PERMITIDOS"
-2. SE precisar modificar arquivo proibido, PEÇA PERMISSÃO PRIMEIRO
-3. NUNCA modifique arquivos que outros agentes estão usando simultaneamente
-```
-
-**Como identificar arquivos:**
-
-```javascript
-// 1. Extrair do Plan da task
-const planContent = task.plan
-const arquivosMencionados = planContent.match(/[\w-/]+\.(ts|js|tsx|jsx)/g) || []
-
-// 2. Adicionar ao prompt
-prompt += `
-## 📁 ARQUIVOS PERMITIDOS:
-${arquivosMencionados.map(f => `- ${f}`).join('\n')}
-
-## 🚫 ARQUIVOS PROIBIDOS:
-- src/main.ts (CRÍTICO)
-- src/config.ts (CRÍTICO)
-[lista de arquivos que outros agentes estão usando]
-`
-```
-
-**Exemplo Prático:**
-
-```javascript
-// Task: Implementar Models e Services
-// Outras tasks simultâneas:
-//   - task-12: Routes (agente B)
-//   - task-13: Controllers (agente C)
-
-const prompt = `
-# Task: Implementar Models e Services
-
-## 📁 ARQUIVOS QUE VOCÊ PODE MODIFICAR:
-- src/auth/models/user.ts
-- src/auth/models/session.ts
-- src/auth/services/auth.service.ts
-
-## 🚫 ARQUIVOS PROIBIDOS (NÃO MODIFICAR):
-- src/auth/routes/ (task-12 - agente B)
-- src/auth/controllers/ (task-13 - agente C)
-- src/main.ts (CRÍTICO)
-
-## ⚠️ INSTRUÇÕES:
-1. Criar/modificar APENAS models e services
-2. SE precisar de routes/controllers, AVISE PRIMEIRO
-3. NUNCA modifique main.ts
-
-## Plan:
-...
-`
-```
-
-**Step 3: Executar delegação**
 ```bash
-# Auto-detecta modelo baseado em keywords
-./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .claude/gemini-orchestrator/prompts/task-ID-descricao.txt
+# Detectar automaticamente (Flash para implementação, Pro para planejamento)
+# Ver keywords no prompt: "implementar", "criar" → Flash
+# Ver keywords no prompt: "planejar", "design", "analisar" → Pro
 
-# Forçar modelo específico se necessário
-./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
-  .claude/gemini-orchestrator/prompts/task-ID-descricao.txt
+# Flash implementation
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID-descricao.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/flash-$(date +%Y%m%d-%H%M).md
+
+# Pro planning
+gemini -m gemini-3-pro-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID-descricao.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/pro-$(date +%Y%m%d-%H%M).md
 ```
 
 **Step 4: Revisar relatório**
+
 ```bash
-# Relatório salvo automaticamente
-cat .claude/gemini-orchestrator/reports/flash-YYYY-MM-DD-HH-MM.md
+# Relatório salvo automaticamente em .claude/gemini-orchestrator/reports/
+cat .claude/gemini-orchestrator/reports/flash-YYYYMMDD-HHMM.md
 ```
 
 **Step 5: Validar (como Orchestrator)**
+
 ```bash
-# VOCÊ executa esses (NÃO o agent)
+# VOCÊ executa estes (NÃO o agent)
 npm run build
 npm test
 npm start  # Para validação end-to-end
 ```
 
 **Step 6: Atualizar Backlog (se usando spec-workflow)**
+
 ```javascript
 // ⚠️ IMPORTANTE: AGENTE GEMINI DEVE ATUALIZAR BACKLOG
 
@@ -343,6 +273,7 @@ console.log("   - ACs: Todos marcados como [x]")
 | **Design/Arquitetura** | gemini-3-pro | Especifique "DESIGN task" |
 | **Análise de problemas** | gemini-3-pro | Especifique "PROBLEM RESOLUTION" |
 | **Ler código para análise** | gemini-3-pro | Pode ler, NÃO implementa |
+| **Ajustar permissões** | gemini-3-pro | Durante resolução de problemas |
 | **Codificação** | gemini-3-flash | Pode executar Bash/apps |
 | **Executar scripts em dev** | gemini-3-flash | Durante implementação |
 | **Iniciar servidores em dev** | gemini-3-flash | Durante implementação |
@@ -388,8 +319,7 @@ Referências detalhadas disponíveis em `references/`:
 8. **troubleshooting.md** - Solução de problemas
 9. **cli-configuration.md** - Configuração do gemini-cli
 10. **responsibility-matrix.md** - Matriz de responsabilidades detalhada
-11. **delegate-script-workflow.md** - Workflow completo do delegate.sh
-12. **agents-vs-orchestrator.md** - Separação de responsabilidades
+11. **direct-execution.md** - Execução direta via gemini CLI (NOVO)
 
 Para regras detalhadas, consulte `references/basic-rules.md`.
 
@@ -432,7 +362,8 @@ Antes de usar esta skill, certifique-se:
 
 3. **Diretório de orquestração inicializado:**
    ```bash
-   ls .claude/gemini-orchestrator/prompts/TEMPLATE-*.txt
+   mkdir -p .claude/gemini-orchestrator/prompts
+   mkdir -p .claude/gemini-orchestrator/reports
    ```
 
 4. **Basic Memory MCP ativo** (opcional mas recomendado):
@@ -449,19 +380,19 @@ Antes de usar esta skill, certifique-se:
 **VOCÊ É O ORCHESTRATOR, NÃO O IMPLEMENTER**
 
 Se usuário pedir implementação de código:
-1. ✅ Criar prompt do template
-2. ✅ Executar via delegate.sh
+1. ✅ Criar arquivo de prompt com contexto completo
+2. ✅ Executar via `gemini --approval-mode yolo -p "$(cat prompt.txt)"`
 3. ✅ Validar resultados
 4. ❌ **NUNCA** escreva código você mesmo (exceto se explicitamente solicitado)
 
 ### Outras Regras Críticas
 
-1. ✅ **SEMPRE use delegate.sh** - não execute `gemini -p "..."` manualmente
+1. ✅ **SEMPRE use arquivo de prompt** - não execute `gemini -p "..."` manualmente
 2. ✅ **SEMPRE delegue TUDO** - inclusive planejamentos e design
-3. ✅ **SEMPRE use --yolo** - delegate.sh adiciona automaticamente
+3. ✅ **SEMPRE use --yolo** - auto-aprovação de ferramentas
 4. ✅ **VOCÊ valida** - agents implementam, VOCÊ executa build/test/validation final
 5. ✅ **Agents GEMINI atualizam Backlog** - OBRIGATÓRIO: Status "In Progress" → "Done" + ACs
-6. ✅ **Prompts em arquivos** - criados dos templates, salvos em `.claude/gemini-orchestrator/prompts/`
+6. ✅ **Prompts em arquivos** - salvos em `.claude/gemini-orchestrator/prompts/`
 7. ✅ **Relatórios auto-salvos** - verifique `.claude/gemini-orchestrator/reports/` após delegações
 8. ✅ **Integração Memory** - fetch antes, save depois das delegações
 
@@ -469,6 +400,7 @@ Se usuário pedir implementação de código:
 
 ## Version History
 
+- **v2.6.0** (2026-01-13): **BREAKING**: Removido delegate.sh - execução direta via `gemini --approval-mode yolo -p arquivo.txt`
 - **v2.5.0** (2026-01-13): **OBRIGATÓRIO**: Agents Gemini SEMPRE atualizam Backlog.md (status + ACs) ao assumir/concluir tasks
 - **v2.4.0** (2026-01-12): ENFATIZADO: Orquestrator NUNCA implementa, SEMPRE delega (inclusive planejamentos). Estrutura padrão de prompts documentada. Modo --yolo em destaque.
 - **v2.3.1** (2026-01-12): Clarificados delegados (validation, Backlog.md = Orchestrator)
@@ -478,4 +410,4 @@ Se usuário pedir implementação de código:
 
 ---
 
-**Remember:** You are the Orchestrator. **NUNCA "bote a mão na massa"**. **SEMPRE delegue TUDO** (planejamento, design, implementação). Use `delegate.sh` para coordenar agents, fornecer contexto rico, deixe-os desenvolver durante implementação. Agents Gemini atualizam o Backlog.md automaticamente (status + ACs), VOCÊ valida e VOCÊ toma decisões finais.
+**Remember:** You are the Orchestrator. **NUNCA "bote a mão na massa"**. **SEMPRE delegue TUDO** (planejamento, design, implementação). Execute via `gemini --approval-mode yolo -p arquivo.txt`, fornecer contexto rico, deixe agents desenvolverem durante implementação. Agents Gemini atualizam o Backlog.md automaticamente (status + ACs), VOCÊ valida e VOCÊ toma decisões finais.
