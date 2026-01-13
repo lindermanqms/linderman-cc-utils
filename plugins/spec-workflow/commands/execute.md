@@ -324,6 +324,98 @@ ${memoryPatterns}
 - ✅ ACs podem ser validados corretamente
 - ✅ Implementação segue o Plan (Spec) exatamente
 
+#### 3. 🤖 REGRAS PARA AGENTES GEMINI (OBRIGATÓRIO)
+
+**⚠️ CONDICIONAL: Aplica-se APENAS quando delegando para agentes Gemini**
+
+**Quando delegar uma task para um agente Gemini (via `gemini-orchestrator`), o agente DEVE:**
+
+**A) AO ASSUMIR A TASK (Início):**
+```javascript
+// Agente Gemini DEVE executar IMEDIATAMENTE:
+backlog_task_update(task.id, {
+  status: "In Progress",
+  notes: task.notes + `\n\n## 🤖 Assumida por Gemini-3-Flash\n${timestamp}\nVia gemini-orchestrator\n`
+})
+```
+
+**B) AO CONCLUIR A TASK (Fim):**
+```javascript
+// Agente Gemini DEVE executar ANTES de finalizar:
+// 1. Marcar ACs como concluídos
+backlog_task_edit(task.id, {
+  check_acceptance_criteria: [1, 2, 3]  // Todos os ACs implementados
+})
+
+// 2. Atualizar status
+backlog_task_update(task.id, {
+  status: "Done",  // OU "In Review" se requer revisão
+  notes: task.notes + `\n\n## ✅ Concluída por Gemini-3-Flash\n${timestamp}\nTodos os ACs marcados como [x]\nBacklog atualizado.\n`
+})
+
+// 3. Informar explicitamente
+console.log("✅ Task concluída E backlog atualizado!")
+```
+
+**C) REPORTAR OBRIGATORIAMENTE:**
+```javascript
+// Agente Gemini DEVE sempre informar ao final:
+"✅ Task ${task.id} concluída com sucesso!
+📋 Backlog atualizado:
+   - Status: Done
+   - ACs: Todos marcados como [x]
+   - Notes: Progresso registrado"
+```
+
+**⚠️ POR QUE ESSA REGRA É OBRIGATÓRIA?**
+
+- ✅ **Rastreio**: Sabe-se que Gemini está trabalhando na task
+- ✅ **Transparência**: Progresso visível no backlog
+- ✅ **Comunicação**: Claude Code sabe o status atual
+- ✅ **Não duplicidade**: Evita atualizações manuais
+
+**EXEMPLO COMPLETO DE WORKFLOW COM GEMINI:**
+
+```javascript
+// 1. Claude Code delega para Gemini
+/gemini-orchestrator "Implementar task-10"
+
+// 2. Gemini ASSUME a task (executa automaticamente)
+backlog_task_update("task-10", {
+  status: "In Progress",
+  notes: "## 🤖 Assumida por Gemini-3-Flash\n2026-01-13 10:30\nVia gemini-orchestrator"
+})
+
+// 3. Gemini IMPLEMENTA
+
+// 4. Gemini CONCLUI (executa automaticamente)
+backlog_task_edit("task-10", {
+  check_acceptance_criteria: [1, 2, 3, 4, 5]
+})
+
+backlog_task_update("task-10", {
+  status: "Done",
+  notes: "...✅ Concluída por Gemini-3-Flash\n2026-01-13 12:45\nACs: 5/5 completos\nBacklog atualizado."
+})
+
+// 5. Gemini REPORTA
+"✅ Task task-10 concluída!
+📋 Backlog atualizado:
+   - Status: Done
+   - ACs: 5/5 [x]
+   - Implementação completa"
+```
+
+**⚠️ SE GEMINI NÃO ATUALIZAR O BACKLOG:**
+
+```javascript
+// Claude Code DEVE cobrar:
+"⚠️ Gemini concluiu a task mas NÃO atualizou o backlog!
+   Por favor, execute:
+   1. backlog_task_update('task-10', { status: 'Done' })
+   2. backlog_task_edit('task-10', { check_acceptance_criteria: [1,2,3,4,5] })"
+```
+
 ### Fase 8: Atualizar Notas Progressivamente
 
 **Durante a execução, registrar observações incrementalmente:***

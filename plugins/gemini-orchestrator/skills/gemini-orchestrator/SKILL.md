@@ -217,12 +217,39 @@ npm start  # Para validação end-to-end
 
 **Step 6: Atualizar Backlog (se usando spec-workflow)**
 ```javascript
-// VOCÊ faz isso (NÃO o agent)
+// ⚠️ IMPORTANTE: AGENTE GEMINI DEVE ATUALIZAR BACKLOG
+
+// AGENTE GEMINI deve executar ANTES de finalizar:
+// 1. AO ASSUMIR (início)
 await backlog_task_update({
   id: "task-ID",
-  notes: "Implementação completada via Gemini Flash. Relatório: .claude/gemini-orchestrator/reports/flash-*.md"
+  status: "In Progress",
+  notes: task.notes + "\n\n## 🤖 Assumida por Gemini-3-Flash\n" + timestamp + "\nVia gemini-orchestrator\n"
 })
+
+// 2. AO CONCLUIR (fim)
+await backlog_task_edit({
+  id: "task-ID",
+  check_acceptance_criteria: [1, 2, 3]  // Todos os ACs implementados
+})
+
+await backlog_task_update({
+  id: "task-ID",
+  status: "Done",
+  notes: task.notes + "\n\n## ✅ Concluída por Gemini-3-Flash\n" + timestamp + "\nTodos os ACs marcados como [x]\nBacklog atualizado.\n"
+})
+
+// 3. REPORTAR OBRIGATORIAMENTE
+console.log("✅ Task task-ID concluída!")
+console.log("📋 Backlog atualizado:")
+console.log("   - Status: Done")
+console.log("   - ACs: Todos marcados como [x]")
 ```
+
+**⚠️ REGRA OBRIGATÓRIA**: Agentes Gemini SEMPRE atualizam o backlog!
+- ✅ Ao assumir: Status → "In Progress"
+- ✅ Ao concluir: Status → "Done" + ACs marcados
+- ✅ Sempre informar: "Backlog atualizado"
 
 ---
 
@@ -240,6 +267,7 @@ await backlog_task_update({
 | **Executar scripts em dev** | gemini-3-flash | Durante implementação |
 | **Iniciar servidores em dev** | gemini-3-flash | Durante implementação |
 | **Usar MCP em dev** | gemini-3-flash | Quando necessário |
+| **🔧 ATUALIZAR BACKLOG** | **gemini-3-flash** | **OBRIGATÓRIO ao assumir/concluir** |
 | **Testes finais** | Orchestrator (Sonnet) | Após delegações |
 | **Executar servers para validação** | Orchestrator | Testes end-to-end |
 | **Usar MCP para validação** | Orchestrator | Quando necessário |
@@ -352,7 +380,7 @@ Se usuário pedir implementação de código:
 2. ✅ **SEMPRE delegue TUDO** - inclusive planejamentos e design
 3. ✅ **SEMPRE use --yolo** - delegate.sh adiciona automaticamente
 4. ✅ **VOCÊ valida** - agents implementam, VOCÊ executa build/test/validation final
-5. ✅ **VOCÊ gerencia Backlog** - agents NUNCA tocam Backlog.md MCP
+5. ✅ **Agents GEMINI atualizam Backlog** - OBRIGATÓRIO: Status "In Progress" → "Done" + ACs
 6. ✅ **Prompts em arquivos** - criados dos templates, salvos em `.claude/gemini-orchestrator/prompts/`
 7. ✅ **Relatórios auto-salvos** - verifique `.claude/gemini-orchestrator/reports/` após delegações
 8. ✅ **Integração Memory** - fetch antes, save depois das delegações
@@ -361,6 +389,7 @@ Se usuário pedir implementação de código:
 
 ## Version History
 
+- **v2.5.0** (2026-01-13): **OBRIGATÓRIO**: Agents Gemini SEMPRE atualizam Backlog.md (status + ACs) ao assumir/concluir tasks
 - **v2.4.0** (2026-01-12): ENFATIZADO: Orquestrator NUNCA implementa, SEMPRE delega (inclusive planejamentos). Estrutura padrão de prompts documentada. Modo --yolo em destaque.
 - **v2.3.1** (2026-01-12): Clarificados delegados (validation, Backlog.md = Orchestrator)
 - **v2.3.0** (2026-01-11): Adicionado delegate.sh script e estrutura .claude/gemini-orchestrator/
@@ -369,4 +398,4 @@ Se usuário pedir implementação de código:
 
 ---
 
-**Remember:** You are the Orchestrator. **NUNCA "bote a mão na massa"**. **SEMPRE delegue TUDO** (planejamento, design, implementação). Use `delegate.sh` para coordenar agents, fornecer contexto rico, deixe-os desenvolver durante implementação, mas VOCÊ valida, VOCÊ gerencia Backlog.md, e VOCÊ toma decisões finais.
+**Remember:** You are the Orchestrator. **NUNCA "bote a mão na massa"**. **SEMPRE delegue TUDO** (planejamento, design, implementação). Use `delegate.sh` para coordenar agents, fornecer contexto rico, deixe-os desenvolver durante implementação. Agents Gemini atualizam o Backlog.md automaticamente (status + ACs), VOCÊ valida e VOCÊ toma decisões finais.
