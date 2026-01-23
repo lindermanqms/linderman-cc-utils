@@ -21,9 +21,14 @@
       "description": "Workflow Spec-Driven Development com integração Backlog.md e Cipher Memory"
     },
     {
+      "name": "gemini-coordination",
+      "source": "./plugins/gemini-coordination",
+      "description": "Orquestração multi-modelo Gemini (Flash como padrão para implementação, Pro para planejamento complexo) com execução direta via gemini-cli e zero dependências externas"
+    },
+    {
       "name": "gemini-orchestrator",
       "source": "./plugins/gemini-orchestrator",
-      "description": "Sistema de orquestração para delegar tarefas complexas aos modelos Gemini (Pro para planejamento, Flash para implementação) com coleta automática de contexto e integração com memória"
+      "description": "[DEPRECATED v2.6.0] Sistema de orquestração para delegar tarefas complexas aos modelos Gemini (use gemini-coordination)"
     },
     {
       "name": "git-worktrees",
