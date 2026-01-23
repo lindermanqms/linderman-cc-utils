@@ -1,5 +1,100 @@
 # Changelog - Gemini Orchestrator Plugin
 
+## [2.6.0] - 2026-01-22 - **BREAKING CHANGE**
+
+### 🔥 Removed (Breaking Changes)
+
+- **Scripts directory removed**: `scripts/delegate.sh` and `scripts/extract-report.sh`
+  - **Problem**: Path discovery impossible - agents could not locate scripts in plugin cache
+  - **Location**: Scripts lived in `~/.claude/plugins/cache/.../gemini-orchestrator/scripts/`
+  - **Execution**: Agents executed from user's project directory
+  - **No variable**: No `$CLAUDE_PLUGIN_ROOT` available at runtime
+  - **Result**: Agents wasted significant time searching for unfindable files
+
+- **Templates directory deprecation**: External template files no longer used
+  - **Problem**: Templates could not be found by agents (same path discovery issue)
+  - **Files removed**: `TEMPLATE-pro-planning.txt`, `TEMPLATE-flash-implementation.txt`
+  - **Directory kept**: `templates/` kept with deprecation notice for reference
+
+### ✅ Added
+
+- **Inline template documentation**: Complete templates in `references/prompt-templates.md`
+  - Flash implementation template with full structure
+  - Pro planning template with 7-section format
+  - Examples of creating prompts via heredoc
+  - Usage instructions for direct gemini-cli execution
+
+- **Deprecation notices**: Clear migration guidance
+  - `templates/README.md` - Explains deprecation and new workflow
+  - `templates/SETUP-GUIDE.md` - Migration instructions
+
+### 🔧 Changed
+
+- **Workflow simplification**: Direct gemini-cli execution instead of wrapper scripts
+  - **Old**: `./plugins/gemini-orchestrator/scripts/delegate.sh prompts/task.txt`
+  - **New**: `gemini -m gemini-3-flash-preview --approval-mode yolo -p "$(cat prompts/task.txt)"`
+
+- **Template creation**: Inline creation instead of copying external files
+  - **Old**: `cp templates/TEMPLATE-flash.txt prompts/task-10.txt`
+  - **New**: `cat > prompts/task-10.txt <<'EOF' ... EOF` (consult references/prompt-templates.md)
+
+- **SKILL.md improvements**:
+  - Fixed second-person violations (VOCÊ → Orchestrator)
+  - Removed references to external scripts and templates
+  - Updated instructions for inline prompt creation
+
+- **Examples updated**:
+  - `examples/simple-delegation.md` - No more delegate.sh, direct execution
+  - `examples/complex-orchestration.md` - Inline prompt creation for both phases
+
+- **README.md reorganization**:
+  - v2.6.0 changelog section added
+  - Migration guide from v2.5 → v2.6
+  - Removed delegate.sh documentation
+  - Updated workflow examples
+
+### 📚 Documentation
+
+- **Progressive disclosure maintained**: Templates in references/, not external files
+- **No external dependencies**: Everything accessible via skill references
+- **Clear migration path**: Detailed before/after examples
+
+### Why This Change?
+
+**Root Cause**: Plugin files are cached in unpredictable locations that agents cannot discover.
+
+**Benefits of v2.6.0**:
+- ✅ No more path discovery issues
+- ✅ Templates always accessible (in references/)
+- ✅ More transparent workflow (explicit gemini-cli commands)
+- ✅ Easier debugging (no wrapper scripts)
+- ✅ Self-contained (no external file dependencies)
+- ✅ Better progressive disclosure (templates loaded when needed)
+
+### Migration Guide
+
+**BEFORE (v2.5):**
+```bash
+cp plugins/gemini-orchestrator/templates/TEMPLATE-flash.txt .claude/gemini-orchestrator/prompts/task-10.txt
+./plugins/gemini-orchestrator/scripts/delegate.sh .claude/gemini-orchestrator/prompts/task-10.txt
+```
+
+**AFTER (v2.6):**
+```bash
+# 1. Consult templates in references/prompt-templates.md
+# 2. Create prompt inline
+cat > .claude/gemini-orchestrator/prompts/task-10.txt <<'EOF'
+[content from references/prompt-templates.md]
+EOF
+
+# 3. Execute directly
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/flash-$(date +%Y%m%d-%H%M).md
+```
+
+---
+
 ## [2.3.1] - 2026-01-11
 
 ### Fixed

@@ -59,17 +59,22 @@ A skill é automaticamente ativada quando você usa estas frases:
 
 ### Exemplos Rápidos
 
-**Delegação simples:**
-```
-User: "Delegate to gemini: implement JWT authentication"
+**⚠️ IMPORTANT - v2.6.0 Breaking Changes:**
+- ❌ **DO NOT use** `delegate.sh` script (removed)
+- ❌ **DO NOT copy** `TEMPLATE-*.txt` files (do not exist)
+- ✅ **ALWAYS** create prompts inline and execute directly via `gemini-cli`
 
-Orchestrator:
-├─ Busca padrões de auth no memory
-├─ Coleta contexto (CLAUDE.md, specs)
-├─ Delega para gemini-3-flash (implementação)
-├─ Salva padrões descobertos no memory
-├─ Roda testes
-└─ Reporta resultados
+**Exemplo rápido:**
+```bash
+# 1. Create prompt file inline
+cat > .claude/gemini-orchestrator/prompts/task-10.txt <<'EOF'
+[See references/prompt-templates.md for complete templates]
+EOF
+
+# 2. Execute directly via gemini-cli
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/flash-$(date +%Y%m%d-%H%M).md
 ```
 
 **Orquestração complexa:**
@@ -100,133 +105,67 @@ A skill usa **progressive disclosure** - conteúdo detalhado é carregado sob de
 
 ### Arquivos da Skill
 
-- **SKILL.md**: Visão geral conciso (600-800 palavras)
+- **SKILL.md**: Visão geral e instruções essenciais
 - **references/**: Documentação técnica detalhada
+- **examples/**: Exemplos completos de workflows
 
 ### Guias de Referência
 
-1. **[`delegation-strategy.md`](skills/gemini-orchestrator/references/delegation-strategy.md)**
+1. **[`prompt-templates.md`](skills/gemini-orchestrator/references/prompt-templates.md)**
+   Templates completos para criar prompts inline (Flash e Pro)
+
+2. **[`delegation-strategy.md`](skills/gemini-orchestrator/references/delegation-strategy.md)**
    Quando usar cada modelo Gemini (Pro vs Flash vs Explore)
 
-2. **[`context-provision.md`](skills/gemini-orchestrator/references/context-provision.md)**
-   Como fornecer contexto completo aos modelos Gemini
-
-3. **[`memory-integration.md`](skills/gemini-orchestrator/references/memory-integration.md)**
-   Integração com Basic Memory: auto-fetch e auto-save
-
-4. **[`prompt-templates.md`](skills/gemini-orchestrator/references/prompt-templates.md)**
-   Templates prontos para delegações a gemini-3-pro e gemini-3-flash
-
-5. **[`workflow-patterns.md`](skills/gemini-orchestrator/references/workflow-patterns.md)**
+3. **[`workflow-patterns.md`](skills/gemini-orchestrator/references/workflow-patterns.md)**
    Padrões de orquestração: Simple, Complex, Error Resolution
 
-6. **[`error-resolution.md`](skills/gemini-orchestrator/references/error-resolution.md)**
-   Estratégias para tratar erros durante orquestração
+4. **[`memory-integration.md`](skills/gemini-orchestrator/references/memory-integration.md)**
+   Integração com Basic Memory: auto-fetch e auto-save
 
-7. **[`spec-workflow-integration.md`](skills/gemini-orchestrator/references/spec-workflow-integration.md)**
+5. **[`spec-workflow-integration.md`](skills/gemini-orchestrator/references/spec-workflow-integration.md)**
    Integração com plugin spec-workflow (Backlog.md)
 
-8. **[`troubleshooting.md`](skills/gemini-orchestrator/references/troubleshooting.md)**
-   Solução de problemas: gemini-cli, API key, Memory
-
-9. **[`responsibility-matrix.md`](skills/gemini-orchestrator/references/responsibility-matrix.md)**
+6. **[`responsibility-matrix.md`](skills/gemini-orchestrator/references/responsibility-matrix.md)**
    Matriz de responsabilidades: Quem faz o quê
 
-10. **[`cli-configuration.md`](skills/gemini-orchestrator/references/cli-configuration.md)**
-    Configuração do gemini-cli: `--yolo`, `--approval-mode`, MCP, ferramentas
-
-11. **[`delegate-script-workflow.md`](skills/gemini-orchestrator/references/delegate-script-workflow.md)**
-    Workflow simplificado com script `delegate.sh` para execução de prompts
-
-## Scripts de Apoio
-
-### `delegate.sh`
-
-Script helper para executar delegações de forma padronizada:
-
-```bash
-# Auto-detecta modelo e executa
-./plugins/gemini-orchestrator/scripts/delegate.sh prompts/implement-auth.txt
-
-# Ver ajuda
-./plugins/gemini-orchestrator/scripts/delegate.sh -h
-```
-
-**Recursos**:
-- ✅ Lê prompts de arquivos (evita problemas de parsing)
-- ✅ Auto-detecta modelo (Pro vs Flash) baseado em keywords
-- ✅ Salva relatórios automaticamente em `.claude/gemini-orchestrator/reports/`
-- ✅ Extrai relatórios estruturados
-- ✅ Histórico organizado de delegações
-
-Para workflow completo, consulte:
-- `templates/SETUP-GUIDE.md` - Guia de setup e workflow completo
-- `skills/gemini-orchestrator/references/delegate-script-workflow.md` - Documentação detalhada do delegate.sh
+7. **[`troubleshooting.md`](skills/gemini-orchestrator/references/troubleshooting.md)**
+   Solução de problemas: gemini-cli, API key, Memory
 
 ## Recursos Adicionais
 
 - **CHANGELOG.md**: Histórico de versões
-- **Plugin Manifest**: `plugins/gemini-orchestrator/.claude-plugin/plugin.json`
-- **Marketplace**: `.claude-plugin/marketplace.json`
+- **examples/**: Exemplos completos de workflows
+  - `simple-delegation.md` - Workflow de task única
+  - `complex-orchestration.md` - Workflow multi-fase (Pro→Flash)
 
 ## Versão
 
-**v2.3.1** (2026-01-11)
-- 🐛 **BUGFIX**: Templates ausentes - Erro ao copiar TEMPLATE-*.txt
-  - Criado diretório `templates/` no plugin com templates versionados
-  - Templates agora disponíveis em `plugins/gemini-orchestrator/templates/`
-  - Documentado processo de setup para copiar templates para `.claude/gemini-orchestrator/prompts/`
-  - README.md em templates/ explica estrutura completa
+**v2.6.0** (2026-01-17) - **BREAKING CHANGE**
+- 🔥 **REMOVIDO**: Scripts `delegate.sh` e `extract-report.sh`
+  - **Motivo**: Path discovery impossível - agents não conseguiam encontrar scripts no cache do plugin
+  - **Solução**: Execução direta via `gemini --approval-mode yolo -p "$(cat arquivo.txt)"`
+- 🔥 **REMOVIDO**: Diretório `templates/` externo
+  - **Motivo**: Templates externos não eram encontráveis pelo agente
+  - **Solução**: Templates inline em `references/prompt-templates.md` + criação via heredoc
+- ✅ **NOVO**: Instruções completas de criação inline de prompts
+- ✅ **MELHORADO**: Documentação atualizada sem dependências de arquivos externos
+- ✅ **CORRIGIDO**: Violações de segunda pessoa no SKILL.md (forma imperativa)
 
-**v2.3.0** (2026-01-11)
-- 📚 **CLARIFICAÇÃO IMPORTANTE**: Como scripts funcionam
-  - Adicionada seção "How Scripts Work" no SKILL.md
-  - Scripts NÃO são copiados para o projeto
-  - Scripts são executados diretamente de `plugins/gemini-orchestrator/scripts/`
-  - Rationale: single source of truth, auto-updates, sem duplicação
-- 📁 **NOVA estrutura examples/**
-  - `simple-delegation.md` - Workflow de task única
-  - `complex-orchestration.md` - Workflow multi-fase (Pro→Flash)
-  - Removidos exemplos extensos do SKILL.md (compactado de ~4,200 para ~2,244 palavras)
-- 🎯 **description atualizada**: Agora menciona "delegate.sh" e localização dos scripts
+**Migração de v2.5 para v2.6:**
+```bash
+# ANTES (v2.5)
+cp templates/TEMPLATE-flash.txt prompts/task-10.txt
+./plugins/gemini-orchestrator/scripts/delegate.sh prompts/task-10.txt
 
-**v2.2.4** (2026-01-11)
-- 🚨 **REFORÇO CRÍTICO**: GOLDEN RULE enfatizada ao máximo no SKILL.md
-  - Orchestrator NUNCA deve escrever código (exceto se usuário pedir explicitamente)
-  - Adicionada seção proeminente "🚨 GOLDEN RULE - NEVER BREAK THIS 🚨"
-  - RULE #0 adicionada nas Basic Rules
-  - Critical Reminders reorganizada para começar com este aviso
-
-**v2.2.3** (2026-01-11)
-- 🐛 **BUGFIX CRÍTICO**: Corrigida flag de aprovação automática no delegate.sh
-  - Antes: `--yolo` (sintaxe incorreta, causava erro)
-  - Depois: `--approval-mode yolo` (sintaxe correta)
-  - Script agora funciona corretamente!
-
-**v2.2.2** (2026-01-11)
-- ✅ SKILL.md reescrito para reforçar uso do delegate.sh
-- ✅ Eliminadas ambiguidades sobre método de delegação
-- ✅ Script path e approval mode claramente documentados
-
-**v2.2.1** (2026-01-11)
-- ✅ Clarificação: Agents podem rodar comandos durante dev, mas NÃO fazem validação final
-- ✅ Backlog.md MCP é exclusivamente responsabilidade do Orchestrator
-- ✅ Validação final (build, tests, servers) é do Orchestrator
-
-**v2.2.0** (2026-01-11)
-- ✅ Script `delegate.sh` para execução padronizada
-- ✅ Templates de prompt (Pro e Flash)
-- ✅ Estrutura `.claude/gemini-orchestrator/` para organização
-- ✅ Auto-detecção de modelo baseada em keywords
-- ✅ Salvamento automático de relatórios
-
-**v2.1.1** (2026-01-11)
-- ✅ Flag `--yolo` para autonomia completa dos agentes
-- ✅ Checagem estática obrigatória antes de relatórios
-- ✅ Protocolo de erro (3 tentativas) para resiliência
-- ✅ Limitações de operações destrutivas (apenas Orchestrator)
-
-**v2.0.0** (2026-01-11) - Transformado de agent para skill com progressive disclosure
+# AGORA (v2.6)
+cat > .claude/gemini-orchestrator/prompts/task-10.txt <<'EOF'
+[conteúdo do template - veja references/prompt-templates.md]
+EOF
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/flash-$(date +%Y%m%d-%H%M).md
+```
 
 ---
 

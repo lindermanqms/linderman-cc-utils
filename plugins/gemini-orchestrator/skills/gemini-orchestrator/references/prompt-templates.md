@@ -1,603 +1,427 @@
 # Prompt Templates
 
-Ready-to-use templates for Gemini delegations. Copy, customize, and execute.
+Complete prompt templates for delegating to Gemini models. Create prompt files directly in `.claude/gemini-orchestrator/prompts/` using these templates.
 
-## Template for gemini-3-pro-preview (Reasoning/Planning)
+## Template: Flash Implementation
 
-### Structure
+Use this template for implementation tasks (coding, refactoring, bug fixes).
 
-```bash
-gemini -p "
-IMPORTANT: This is a [PLANNING | PROBLEM RESOLUTION | ARCHITECTURE REVIEW] task (NOT implementation).
+```markdown
+# IMPLEMENTATION TASK - [Task Title]
 
-You are Gemini-3-Pro, an expert in [DOMAIN].
+You are Gemini-3-Flash, expert [language/framework] developer.
 
-TASK: [specific objective]
+## PROJECT CONTEXT
 
-MEMORY CONTEXT (Previous Learnings):
-${MEMORY_KNOWLEDGE}
+**Project Slug**: [extract via basename $(git rev-parse --show-toplevel)]
 
-PROJECT CONTEXT:
-- Standards: [CLAUDE.md content or description]
-- Architecture: [patterns from Explore]
-- Documentation: [relevant URLs]
+**Standards (CLAUDE.md)**:
+[Paste relevant CLAUDE.md content]
 
-DOMAIN CONTEXT:
-- [background information]
-- [constraints]
-- [requirements]
+**Existing Code**:
+[Paste relevant files]
 
-ANALYSIS REQUIRED:
-1. [aspect 1]
-2. [aspect 2]
-3. [aspect 3]
+## MEMORY CONTEXT
 
-YOUR CAPABILITIES:
-- Read and analyze code (DO NOT implement)
-- Adjust file permissions if needed (for problem resolution)
-- Identify root causes
-- Propose solutions
-- Design architectures
+**Patterns**:
+[Results from search_nodes({ query: "{slug} {domain} patterns" })]
 
-OUTPUT FORMAT:
-- Structured reasoning
-- Trade-off analysis
-- Recommendation with rationale
-- Risks and mitigations
-- (If debugging) Root cause + proposed solution
+**Similar Solutions**:
+[Results from search_nodes({ query: "{slug} {task-type}" })]
 
-CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT
+## DESIGN CONTEXT (if from Pro)
 
-After your analysis, create a structured report using this EXACT format:
+[Paste gemini-3-pro output with design/architecture]
 
-=== ORCHESTRATOR REPORT ===
+## TASK DESCRIPTION
 
-## Analysis
-[Your analysis of the problem/domain]
+[Describe implementation task in detail]
 
-## Decisions
-[Decisions made with rationale]
+### Acceptance Criteria
 
-## Trade-offs
-[Trade-offs analyzed with pros and cons]
+- [ ] AC 1: [description]
+- [ ] AC 2: [description]
+- [ ] AC 3: [description]
 
-## Alternatives Considered
-[Alternatives evaluated and why rejected]
+### Technical Requirements
 
-## Risks & Mitigations
-[Risks identified and mitigation strategies]
+1. [Technical requirement 1]
+2. [Technical requirement 2]
+3. [Technical requirement 3]
 
-## Recommendations
-[Specific recommendations]
+## IMPLEMENTATION GUIDELINES
 
-## Next Steps
-[Suggested next steps for implementation]
+- Follow patterns from CLAUDE.md
+- Use [framework/library] version [X.Y.Z]
+- Match existing code style
+- Include error handling
+- Write tests for critical paths
 
-=== END REPORT ===
+## FILES TO MODIFY/CREATE
 
-IMPORTANT: The report MUST be the LAST section of your response, immediately before \"=== END REPORT ===\".
-" --model gemini-3-pro-preview --yolo
-```
+- [ ] `path/to/file1.ts` - [What to do]
+- [ ] `path/to/file2.ts` - [What to do]
+- [ ] `tests/file1.test.ts` - [Test description]
 
-**Note**: The `--yolo` flag enables autonomous operation, allowing the agent to:
-- Adjust file permissions during problem resolution
-- Execute commands without approval prompts
-- Perform analysis tasks without user intervention
+## OUTPUT REQUIREMENTS
 
-### Example 1: System Design
+For each file, provide:
+1. Full file path
+2. Complete code (not snippets)
+3. Brief explanation of changes
 
-```bash
-cat CLAUDE.md | gemini -p "
-IMPORTANT: This is a PLANNING task (NOT implementation).
-
-You are Gemini-3-Pro, an expert in web application architecture.
-
-TASK: Design a scalable authentication system for a Chrome extension that interacts with a legacy court system (PJe)
-
-MEMORY CONTEXT:
-$(mcp__memory__search_nodes({ query: \"linderman-cc-utils auth patterns\" }))
-
-PROJECT CONTEXT (stdin):
-Project standards from CLAUDE.md
-
-TECHNICAL REFERENCES:
-- JWT Introduction: https://jwt.io/introduction
-- Chrome Extension Auth: https://developer.chrome.com/docs/extensions/mv3/messaging/
-
-DOMAIN CONTEXT:
-- Legacy system uses cookie-based sessions
-- Extension needs to make authenticated API calls
-- Must handle token expiry gracefully
-- Security is critical (court data)
-
-ANALYSIS REQUIRED:
-1. Authentication flow (extension → backend → PJe)
-2. Token storage strategy (localStorage vs cookies vs chrome.storage)
-3. Refresh token mechanism
-4. Error handling for expired sessions
-
-YOUR CAPABILITIES:
-- Read existing auth code (DO NOT implement)
-- Design architecture and data flows
-- Propose security best practices
-- Identify potential issues
-
-OUTPUT FORMAT:
-1. Architecture Design
-   - Component diagram (text)
-   - Data flow diagram
-   - Sequence diagrams for key operations
-2. Trade-off Analysis
-   - Storage options compared
-   - Security considerations
-3. Recommendation
-   - Chosen approach with rationale
-   - Implementation steps (high-level)
-4. Risks & Mitigations
-   - Security risks
-   - Edge cases
-" --model gemini-3-pro-preview --yolo
-```
-
-### Example 2: Problem Resolution
-
-```bash
-gemini -p "
-IMPORTANT: This is a PROBLEM RESOLUTION task (NOT implementation).
-
-You are Gemini-3-Pro, an expert in debugging Node.js applications.
-
-TASK: Diagnose why the server returns 500 on /api/auth/login endpoint
-
-MEMORY CONTEXT:
-$(mcp__memory__search_nodes({ query: \"linderman-cc-utils error 500\" }))
-
-ERROR DETAILS:
-- Endpoint: POST /api/auth/login
-- Status: 500 Internal Server Error
-- Logs: \"TypeError: Cannot read property 'hash' of undefined\"
-- Occurs: Only for specific users
-- Works: For other users with same credentials format
-
-CODE TO ANALYZE:
-\`\`\`typescript
-$(cat src/auth/service.ts)
-\`\`\`
-
-DATABASE SCHEMA:
-\`\`\`sql
-$(cat db/schema.sql | grep -A 10 \"users\")
-\`\`\`
-
-ANALYSIS REQUIRED:
-1. Identify root cause of TypeError
-2. Explain why it only affects some users
-3. Propose solution
-4. Suggest prevention strategy
-
-YOUR CAPABILITIES:
-- Read and analyze code
-- Identify logic errors
-- Propose fixes (DO NOT implement)
-
-OUTPUT FORMAT:
-1. Root Cause
-   - Exact line/file causing error
-   - Why it occurs
-2. Why Only Some Users?
-   - Data condition analysis
-3. Proposed Solution
-   - Fix description (not code)
-   - Changes needed
-4. Prevention
-   - Validation to add
-   - Tests to write
-" --model gemini-3-pro-preview --yolo
-```
-
-## Template for gemini-3-flash-preview (Implementation)
-
-### Structure
-
-```bash
-gemini -p "
-You are Gemini-3-Flash, expert [LANGUAGE] developer.
-
-TASK: [specific coding task]
-
-MEMORY CONTEXT (Patterns & Solutions):
-${MEMORY_KNOWLEDGE}
-
-PROJECT CONTEXT:
-- Standards: [CLAUDE.md content]
-- Existing code: [files from Explore]
-- Architecture: [from Pro if applicable]
-
-TECHNICAL REFERENCES:
-- [URL 1: API docs]
-- [URL 2: framework guides]
-- [URL 3: best practices]
-
-REQUIREMENTS:
-- [functional requirement 1]
-- [functional requirement 2]
-- [non-functional requirement]
-
-ACCEPTANCE CRITERIA (if from spec):
-- [ ] AC 1
-- [ ] AC 2
-- [ ] AC 3
-
-CODE TO MODIFY (if applicable):
-\`\`\`[language]
-[existing code]
-\`\`\`
-
-YOUR CAPABILITIES:
-- Write and edit code
-- Execute Bash commands during development
-- Run scripts and start servers
-- Use MCP servers when needed
-- Implement solutions designed by Pro
-
-OUTPUT:
-- Complete, functional code
-- Error handling
-- Comments for complex logic
-- [LANGUAGE] best practices
-- Validate all ACs
+---
 
 MANDATORY PRE-REPORT REQUIREMENTS:
-Before creating your final Orchestrator Report, you MUST:
 
-1. **Run Static Code Analysis** (choose appropriate commands):
-   - TypeScript/JavaScript: `npm run lint` and `npm run typecheck`
-   - Python: `ruff check .` and `mypy .`
-   - Rust: `cargo clippy` and `cargo fmt --check`
-   - Go: `go vet ./...` and `gofmt -l .`
+1. **Static Code Analysis** - Run linting and type checking:
+   ```bash
+   # TypeScript/JavaScript
+   npm run lint && npm run typecheck
 
-2. **Error Retry Protocol (3 attempts)**:
-   - If static analysis fails:
-     * Attempt 1: Auto-fix (e.g., `npm run lint -- --fix`)
-     * Attempt 2: Analyze and fix specific errors
-     * Attempt 3: Document difficulties in report
+   # Python
+   ruff check . && mypy .
 
-3. **Test Execution**:
-   - Run project tests: `npm test`, `pytest`, `cargo test`, etc.
-   - Verify all Acceptance Criteria are met
+   # Rust
+   cargo clippy && cargo fmt --check
+   ```
 
-4. **Only Then Create Report**:
-   - After static analysis passes (or documented failures)
-   - After tests pass
-   - Document any remaining issues
+2. **Error Retry Protocol** (if static analysis fails):
+   - Attempt 1: Auto-fix (e.g., `npm run lint -- --fix`)
+   - Attempt 2: Analyze and fix specific errors
+   - Attempt 3: Document difficulties in report
 
-CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT
+3. **Development vs Validation**:
+   - ✅ CAN run commands/servers DURING development (npm install, dev server, etc.)
+   - ❌ CANNOT run final validation (final build, final tests, validation servers)
+   - Final validation is Orchestrator's responsibility
 
-After implementation, create a structured report using this EXACT format:
+4. **Limitations**:
+   - ❌ NEVER delete files (mark for cleanup instead)
+   - ❌ NEVER remove packages
+   - ❌ NEVER use Backlog.md MCP (Orchestrator handles this)
+   - ❌ NEVER run final compilation/build for validation
+   - ❌ NEVER run servers for final validation
+   - ✅ CAN create/edit files, run dev commands, use other MCPs
 
+---
+
+CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT using the marker:
 === ORCHESTRATOR REPORT ===
 
 ## Implementation Summary
 [Concise summary of what was implemented]
 
 ## Files Modified
-- [file path] (created/modified)
-- [file path] (created/modified)
+- `path/to/file1.ts` - [description]
+- `path/to/file2.ts` - [description]
 
 ## Changes Made
-[Description of changes made to each file/component]
-
-## Testing Performed
-- [Test type]: [command] → [result]
-- [Test type]: [command] → [result]
+[Description of changes in each file/component]
 
 ## Static Analysis Results
-✅ [PASSED/FAILED]
+✅ **PASSED** - All linting and type checking passed
+(or)
+❌ **FAILED** - [details after 3 attempts]
 
-**Commands Run**:
-- [Static analysis command 1]: [result]
-- [Static analysis command 2]: [result]
-
-[If failed after 3 attempts, document remaining issues and why they couldn't be resolved]
+## Testing Performed
+[Tests executed and results]
 
 ## Results
-✓ [Achievement 1]
-✓ [Achievement 2]
-✓ [Achievement 3]
+**Achievements**:
+- [x] AC 1: Completed
+- [x] AC 2: Completed
+- [ ] AC 3: Partial (explain)
+
+**Tests**:
+- ✅ Unit tests: X/Y passed
+- ✅ Integration tests: X/Y passed
 
 ## Issues Found
-[If any issues were encountered, document here]
-
-**IMPORTANT REMINDER**:
-- You CANNOT delete files or perform destructive operations
-- You CANNOT remove packages or dependencies
-- Mark files for cleanup instead; Orchestrator will handle deletion
-
-=== END REPORT ===
-
-IMPORTANT: The report MUST be the LAST section of your response, immediately before \"=== END REPORT ===\".
-" --model gemini-3-flash-preview --yolo
+[Problems encountered, if any]
+[Use Error Report format if issues remain after 3 attempts]
 ```
 
-**Note**: The `--yolo` flag enables full implementation autonomy:
-- Create, edit, and delete files without confirmation
-- Execute Bash commands and scripts
-- Start/stop development servers
-- Use MCP servers and tools
-- Run tests and validation commands
+## Template: Pro Planning
 
-### Example 1: New Feature Implementation
+Use this template for planning, design, and architectural analysis tasks.
+
+```markdown
+# PLANNING TASK - [Task Title]
+
+IMPORTANT: This is a PLANNING task (NOT implementation).
+
+You are Gemini-3-Pro, expert in system architecture and design.
+
+## PROJECT CONTEXT
+
+**Project Slug**: [extract via basename $(git rev-parse --show-toplevel)]
+
+**Standards (CLAUDE.md)**:
+[Paste relevant CLAUDE.md content]
+
+**Existing Architecture**:
+[Paste findings from Explore agent]
+
+## MEMORY CONTEXT
+
+**Patterns**:
+[Results from search_nodes({ query: "{slug} patterns" })]
+
+**Decisions**:
+[Results from search_nodes({ query: "{slug} decisions" })]
+
+**Domain Knowledge**:
+[Results from search_nodes({ query: "{slug} {domain}" })]
+
+## TASK DESCRIPTION
+
+[Describe planning/design task in detail]
+
+### Requirements
+
+1. [Requirement 1]
+2. [Requirement 2]
+3. [Requirement 3]
+
+### Acceptance Criteria (from Spec)
+
+- [ ] AC 1: [description]
+- [ ] AC 2: [description]
+- [ ] AC 3: [description]
+
+### Constraints
+
+- [Constraint 1]
+- [Constraint 2]
+
+## ANALYSIS REQUIRED
+
+1. [Aspect to analyze 1]
+2. [Aspect to analyze 2]
+3. [Aspect to analyze 3]
+
+## OUTPUT REQUIREMENTS
+
+Provide structured reasoning with:
+
+1. **Analysis** - Detailed problem/domain analysis
+2. **Decisions** - Decisions made with justification
+3. **Trade-offs** - Trade-offs analyzed with pros and cons
+4. **Alternatives Considered** - Alternatives evaluated and why rejected
+5. **Risks & Mitigations** - Risks identified and mitigation strategies
+6. **Recommendations** - Specific recommendations
+7. **Next Steps** - Next steps for implementation
+
+---
+
+CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT using the marker:
+=== ORCHESTRATOR REPORT ===
+
+[7 sections as listed above]
+```
+
+## Creating Prompt Files Inline
+
+Instead of copying external templates, create prompt files directly using cat heredoc:
+
+### Example: Flash Implementation Prompt
 
 ```bash
-cat CLAUDE.md | gemini -p "
+cat > .claude/gemini-orchestrator/prompts/task-10-jwt-auth.txt <<'EOF'
+# IMPLEMENTATION TASK - JWT Authentication
+
 You are Gemini-3-Flash, expert TypeScript developer.
 
-TASK: Implement JWT authentication service
+## PROJECT CONTEXT
 
-MEMORY CONTEXT:
-$(mcp__memory__search_nodes({ query: \"linderman-cc-utils auth patterns jwt\" }))
+**Project Slug**: my-project
 
-Found from memory:
-- Decision: JWT + refresh tokens in httpOnly cookies
-- Pattern: Use jose library for JWT operations
-- Error fix: Handle token expiry with 401 status
+**Standards (CLAUDE.md)**:
+- Use TypeScript strict mode
+- Follow existing auth patterns
+- Include error handling
 
-PROJECT CONTEXT (stdin):
-Standards from CLAUDE.md
+**Existing Code**:
+[paste relevant auth files]
 
-TECHNICAL REFERENCES:
-- JWT Introduction: https://jwt.io/introduction
-- jose library: https://github.com/panva/jose
-- Express.js middleware: https://expressjs.com/en/guide/using-middleware.html
+## MEMORY CONTEXT
 
-ARCHITECTURE (from Pro):
-- AuthService class with login/refresh/logout methods
-- JWT middleware for route protection
-- Refresh token stored in database
+**Patterns**:
+- pattern-chrome-extension-storage
+- pattern-jwt-cookies
 
-REQUIREMENTS:
-- Access token expires in 15 minutes
-- Refresh token expires in 7 days
-- Tokens stored in httpOnly cookies
-- Password hashing with bcrypt
-- Token blacklist for logout
+## TASK DESCRIPTION
 
-ACCEPTANCE CRITERIA:
-- [ ] User can login with email/password
-- [ ] Access token auto-refreshes when expired
-- [ ] Logout invalidates both tokens
-- [ ] Protected routes return 401 when unauthorized
-- [ ] All endpoints have error handling
+Implement JWT authentication for Chrome extension.
 
-YOUR CAPABILITIES:
-- Write TypeScript code
-- Use npm packages (jose, bcrypt)
-- Create database schemas
-- Write tests
+### Acceptance Criteria
 
-OUTPUT:
-Create these files:
-1. src/auth/service.ts - AuthService class
-2. src/auth/middleware.ts - JWT verification middleware
-3. src/auth/routes.ts - Express routes
-4. src/auth/types.ts - TypeScript interfaces
-5. tests/auth.test.ts - Unit tests
-6. db/migrations/001_auth.sql - Database schema
+- [ ] Generate JWT tokens on login
+- [ ] Store tokens securely in chrome.storage.local
+- [ ] Validate tokens on protected routes
+- [ ] Handle token refresh
 
-Follow project standards:
-- Use async/await
-- Error handling with AppError class
-- Response format: { success, data/error }
-" --model gemini-3-flash-preview --yolo
-```
+### Technical Requirements
 
-### Example 2: Bug Fix Implementation
+1. Use jsonwebtoken library
+2. Token expiry: 15 minutes
+3. Refresh token: 7 days
+4. Secure storage only
 
-```bash
-cat src/auth/service.ts | gemini -p "
-You are Gemini-3-Flash, expert TypeScript developer.
+## IMPLEMENTATION GUIDELINES
 
-TASK: Fix the TypeError in login endpoint
+- Follow CLAUDE.md patterns
+- Use chrome.storage.local API
+- Include error handling
+- Write unit tests
 
-DIAGNOSIS FROM PRO:
-Root Cause: user.password is undefined for users created before password field was added to schema
-Why: Migration didn't backfill password hashes for existing users
-Solution: Add null check and handle gracefully
+## FILES TO MODIFY/CREATE
 
-CODE TO MODIFY (stdin):
-Current auth service implementation
+- [ ] `src/auth/jwt.service.ts` - JWT service
+- [ ] `src/auth/storage.ts` - Secure storage
+- [ ] `tests/auth/jwt.test.ts` - Unit tests
 
-MEMORY CONTEXT:
-$(mcp__memory__search_nodes({ query: \"linderman-cc-utils error handling patterns\" }))
+## OUTPUT REQUIREMENTS
 
-REQUIREMENTS:
-- Add null check for user.password
-- Return clear error message for users without password
-- Log warning for admin to review
-- Don't crash on null/undefined
-
-YOUR CAPABILITIES:
-- Modify existing TypeScript code
-- Add error handling
-- Write defensive code
-
-OUTPUT:
-Modified src/auth/service.ts with:
-1. Null check for password field
-2. Clear error message to client
-3. Warning log for admins
-4. Comments explaining the fix
-5. Maintain existing code style
-" --model gemini-3-flash-preview --yolo
-```
-
-## Template Variations
-
-### For Architecture Review
-
-```bash
-gemini -p "
-IMPORTANT: This is an ARCHITECTURE REVIEW task.
-
-You are Gemini-3-Pro, expert software architect.
-
-TASK: Review proposed API design and suggest improvements
-
-PROPOSED DESIGN:
-\`\`\`
-[paste design document or code]
-\`\`\`
-
-REVIEW CRITERIA:
-- RESTful best practices
-- Security considerations
-- Scalability concerns
-- Error handling patterns
-- Documentation completeness
-
-OUTPUT:
-1. Strengths - What works well
-2. Concerns - Potential issues
-3. Recommendations - Specific improvements
-4. Priority - Critical vs Nice-to-have
-" --model gemini-3-pro-preview --yolo
-```
-
-### For Refactoring
-
-```bash
-cat file-to-refactor.ts | gemini -p "
-You are Gemini-3-Flash, expert refactoring specialist.
-
-TASK: Refactor authentication to use dependency injection
-
-EXISTING CODE (stdin):
-Current tightly-coupled implementation
-
-ARCHITECTURE (from Pro):
-- Use constructor injection
-- Interface-based abstractions
-- Inversion of Control pattern
-
-REQUIREMENTS:
-- Maintain existing behavior
-- Improve testability
-- Follow SOLID principles
-- Add unit tests
-
-OUTPUT:
-Refactored code maintaining exact same API but with DI pattern
-" --model gemini-3-flash-preview --yolo
-```
-
-### For Test Generation
-
-```bash
-cat src/auth/service.ts | gemini -p "
-You are Gemini-3-Flash, expert test engineer.
-
-TASK: Generate comprehensive unit tests for AuthService
-
-CODE TO TEST (stdin):
-AuthService implementation
-
-TESTING REQUIREMENTS:
-- Use Jest framework
-- Test all public methods
-- Test error cases
-- Mock dependencies
-- Achieve 100% coverage
-
-OUTPUT:
-tests/auth/service.test.ts with:
-- Setup/teardown
-- Happy path tests
-- Error case tests
-- Edge case tests
-- Clear test descriptions
-" --model gemini-3-flash-preview --yolo
-```
-
-## Context Injection Patterns
-
-### Pattern 1: Project Documentation
-
-```bash
-cat CLAUDE.md README.md | gemini -p "
-PROJECT CONTEXT (stdin above):
-Review project standards
-
-TASK: ...
-" --model ...
-```
-
-### Pattern 2: Memory + Project Docs
-
-```bash
-MEMORY=$(mcp__memory__search_nodes({ query: "..." }))
-
-cat CLAUDE.md | gemini -p "
-MEMORY CONTEXT:
-${MEMORY}
-
-PROJECT CONTEXT (stdin):
-...
-
-TASK: ...
-" --model ...
-```
-
-### Pattern 3: Architecture + Code
-
-```bash
-PRO_DESIGN=$(previous Pro delegation result)
-EXISTING_CODE=$(cat src/existing.ts)
-
-cat CLAUDE.md | gemini -p "
-ARCHITECTURE (from Pro):
-${PRO_DESIGN}
-
-EXISTING CODE:
-\`\`\`typescript
-${EXISTING_CODE}
-\`\`\`
-
-PROJECT CONTEXT (stdin):
-...
-
-TASK: ...
-" --model gemini-3-flash-preview --yolo
-```
-
-## Output Format Hints
-
-Guide Gemini to structured output:
-
-```bash
-gemini -p "
-...
-
-OUTPUT FORMAT:
-Return JSON with this structure:
-{
-  \"analysis\": \"...\",
-  \"recommendation\": \"...\",
-  \"risks\": [\"...\"],
-  \"nextSteps\": [\"...\"]
-}
-" --model gemini-3-pro-preview --output-format json --yolo
-```
-
-Or for code:
-
-```bash
-gemini -p "
-...
-
-OUTPUT FORMAT:
 For each file, provide:
-1. File path
-2. Full code (not snippets)
-3. Brief explanation of changes
-" --model gemini-3-flash-preview --yolo
+1. Full file path
+2. Complete code
+3. Brief explanation
+
+---
+
+[... rest of mandatory requirements ...]
+
+EOF
 ```
+
+### Example: Pro Planning Prompt
+
+```bash
+cat > .claude/gemini-orchestrator/prompts/task-15-api-design.txt <<'EOF'
+# PLANNING TASK - API Layer Design
+
+IMPORTANT: This is a PLANNING task (NOT implementation).
+
+You are Gemini-3-Pro, expert in system architecture and design.
+
+## PROJECT CONTEXT
+
+**Project Slug**: my-project
+
+**Standards (CLAUDE.md)**:
+- RESTful API design
+- JWT authentication
+- OpenAPI 3.0 documentation
+
+**Existing Architecture**:
+[paste Explore agent findings]
+
+## MEMORY CONTEXT
+
+**Patterns**:
+- pattern-rest-api-versioning
+- decision-auth-strategy
+
+**Decisions**:
+- Use JWT tokens (not sessions)
+- API versioning via URL path
+
+## TASK DESCRIPTION
+
+Design complete API layer for the application.
+
+### Requirements
+
+1. RESTful endpoints for all entities
+2. Authentication and authorization
+3. Rate limiting and caching
+4. Error handling and logging
+
+### Acceptance Criteria
+
+- [ ] All endpoints documented in OpenAPI
+- [ ] Authentication flow designed
+- [ ] Rate limiting strategy defined
+- [ ] Caching strategy defined
+
+### Constraints
+
+- Must work with existing database schema
+- Must support future mobile app
+- Performance: < 100ms response time
+
+## ANALYSIS REQUIRED
+
+1. Endpoint design and organization
+2. Authentication and authorization flow
+3. Rate limiting and caching strategies
+4. Error handling and logging approach
+
+## OUTPUT REQUIREMENTS
+
+[... 7 sections as per template ...]
+
+EOF
+```
+
+## Usage with gemini-cli
+
+Execute the prompt file directly:
+
+```bash
+# Flash implementation
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/flash-$TIMESTAMP.md"
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10-jwt-auth.txt)" \
+  2>&1 | tee "$REPORT_FILE"
+
+# Pro planning
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/pro-$TIMESTAMP.md"
+gemini -m gemini-3-pro-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-15-api-design.txt)" \
+  2>&1 | tee "$REPORT_FILE"
+```
+
+## Template Customization
+
+Customize templates for your project by:
+
+1. **Adding project-specific sections** (e.g., "Database Schema", "API Contracts")
+2. **Including reference URLs** (documentation, examples)
+3. **Specifying allowed/forbidden files** (critical for spec-workflow integration)
+4. **Adding domain-specific guidelines** (e.g., security policies, performance requirements)
+
+### Example: Adding File Restrictions (spec-workflow)
+
+```markdown
+## 📁 ARQUIVOS PERMITIDOS:
+- src/auth/models/user.ts
+- src/auth/services/auth.service.ts
+- src/auth/controllers/auth.controller.ts
+
+## 🚫 ARQUIVOS PROIBIDOS:
+- src/main.ts (CRÍTICO - aplicação principal)
+- src/config/database.ts (CRÍTICO - configuração DB)
+- package.json (usar npm install, não editar diretamente)
+```
+
+## Best Practices
+
+1. **Always provide memory context** - Search Basic Memory before creating prompts
+2. **Include relevant code** - Paste existing files the agent needs to understand
+3. **Be specific with ACs** - Clear, testable acceptance criteria
+4. **Specify file operations** - List exactly which files to create/modify
+5. **Reference documentation** - Include URLs to official docs, examples
+6. **Set clear boundaries** - Specify allowed/forbidden operations
+7. **Use file restrictions** - Critical when using spec-workflow to prevent conflicts
+
+## Related Resources
+
+- `delegation-strategy.md` - When to use Pro vs Flash
+- `context-provision.md` - How to gather and provide context
+- `workflow-patterns.md` - Orchestration patterns
+- `spec-workflow-integration.md` - Integration with Backlog.md

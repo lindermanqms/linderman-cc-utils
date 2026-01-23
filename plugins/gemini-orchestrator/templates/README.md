@@ -1,89 +1,109 @@
-# Gemini Orchestrator Templates
+# ⚠️ DEPRECATED - Templates Directory Removed in v2.6.0
 
-Este diretório contém templates de prompts para delegações aos modelos Gemini.
+**This directory is deprecated and should not be used.**
 
-## Templates Disponíveis
+## What Changed in v2.6.0
 
-- **TEMPLATE-pro-planning.txt** - Para delegações ao gemini-3-pro-preview (planejamento, design, análise)
-- **TEMPLATE-flash-implementation.txt** - Para delegações ao gemini-3-flash-preview (implementação, codificação)
-- **SETUP-GUIDE.md** - Guia completo de setup e workflow (copiar para .claude/gemini-orchestrator/README.md)
+### ❌ REMOVED:
+- `TEMPLATE-pro-planning.txt`
+- `TEMPLATE-flash-implementation.txt`
+- `SETUP-GUIDE.md`
+- All instructions to copy template files
 
-## Como Usar
+### ✅ NEW APPROACH:
+Templates are now **inline** in the skill references, not external files.
 
-### 1. Inicialização (uma vez por projeto)
+## Why the Change?
 
-Quando usar o plugin gemini-orchestrator em um novo projeto, execute:
+**Problem:** Agents could not find template files in the plugin cache directory.
+- Templates lived in `~/.claude/plugins/cache/.../templates/`
+- Agents executed from user's project directory
+- No `$CLAUDE_PLUGIN_ROOT` variable available at runtime
+- Result: Agents wasted time searching for files they could never locate
+
+**Solution:** Templates are now documented inline in `references/prompt-templates.md`
+
+## How to Use Templates Now (v2.6.0+)
+
+### 1. Consult Template Reference
+
+Read the complete templates in:
+```
+plugins/gemini-orchestrator/skills/gemini-orchestrator/references/prompt-templates.md
+```
+
+### 2. Create Prompt File Inline
+
+Use heredoc to create prompt files directly:
 
 ```bash
-# Criar estrutura de diretórios
-mkdir -p .claude/gemini-orchestrator/prompts
-mkdir -p .claude/gemini-orchestrator/reports
+cat > .claude/gemini-orchestrator/prompts/task-10.txt <<'EOF'
+# IMPLEMENTATION TASK - [Task Title]
 
-# Copiar templates do plugin para o projeto
-cp plugins/gemini-orchestrator/templates/TEMPLATE-*.txt \
-   .claude/gemini-orchestrator/prompts/
+You are Gemini-3-Flash, expert [language] developer.
 
-# Copiar guia de setup para referência fácil
-cp plugins/gemini-orchestrator/templates/SETUP-GUIDE.md \
-   .claude/gemini-orchestrator/README.md
+## PROJECT CONTEXT
+[Paste CLAUDE.md]
 
-# Verificar que templates foram copiados
-ls -la .claude/gemini-orchestrator/prompts/TEMPLATE-*.txt
-ls -la .claude/gemini-orchestrator/README.md
+## MEMORY CONTEXT
+[Paste search_nodes results]
+
+## TASK DESCRIPTION
+[Describe task]
+
+[... see references/prompt-templates.md for complete template ...]
+EOF
 ```
 
-### 2. Criar Prompt para Delegação
-
-Para cada tarefa, crie um prompt a partir do template apropriado:
+### 3. Execute Directly via gemini-cli
 
 ```bash
-# Para planejamento/design (Pro)
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-pro-planning.txt \
-   .claude/gemini-orchestrator/prompts/task-10-design-api.txt
-
-# Para implementação (Flash)
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
-   .claude/gemini-orchestrator/prompts/task-10-implement-api.txt
+# No delegate.sh script needed
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/flash-$(date +%Y%m%d-%H%M).md
 ```
 
-### 3. Editar e Executar
+## Migration from v2.5 → v2.6
 
-1. Edite o arquivo criado preenchendo todas as seções
-2. Execute via delegate.sh: `./plugins/gemini-orchestrator/scripts/delegate.sh .claude/gemini-orchestrator/prompts/task-10-design-api.txt`
-
-## Por Que Templates Ficam no Plugin?
-
-- ✅ **Single source of truth** - Templates atualizados com o plugin
-- ✅ **Versionamento** - Templates fazem parte do plugin versionado
-- ✅ **Disponibilidade** - Templates sempre disponíveis para novos projetos
-- ❌ **`.claude/gemini-orchestrator/` está no .gitignore** - Não seria versionado
-
-## Estrutura Completa
-
-```
-projeto/
-├── plugins/
-│   └── gemini-orchestrator/
-│       ├── templates/              ← Templates originais (versionados)
-│       │   ├── TEMPLATE-pro-planning.txt
-│       │   ├── TEMPLATE-flash-implementation.txt
-│       │   └── SETUP-GUIDE.md
-│       └── scripts/
-│           └── delegate.sh
-└── .claude/gemini-orchestrator/          ← Diretório de trabalho (gitignored)
-    ├── README.md                   ← Guia de setup (copiado do plugin)
-    ├── prompts/                    ← Cópias dos templates + prompts de tarefas
-    │   ├── TEMPLATE-pro-planning.txt (copiado do plugin)
-    │   ├── TEMPLATE-flash-implementation.txt (copiado do plugin)
-    │   ├── task-10-design-api.txt
-    │   └── task-10-implement-api.txt
-    └── reports/                    ← Relatórios gerados
-        ├── pro-2026-01-11-14-00.md
-        └── flash-2026-01-11-15-30.md
+**BEFORE (v2.5):**
+```bash
+# ❌ This no longer works
+cp plugins/gemini-orchestrator/templates/TEMPLATE-flash.txt prompts/task-10.txt
+./plugins/gemini-orchestrator/scripts/delegate.sh prompts/task-10.txt
 ```
 
-## Referências
+**NOW (v2.6):**
+```bash
+# ✅ Create prompt inline
+cat > .claude/gemini-orchestrator/prompts/task-10.txt <<'EOF'
+[content from references/prompt-templates.md]
+EOF
 
-- **SKILL.md completo**: `plugins/gemini-orchestrator/skills/gemini-orchestrator/SKILL.md`
-- **Exemplos práticos**: `plugins/gemini-orchestrator/skills/gemini-orchestrator/examples/`
-- **Documentação técnica**: `plugins/gemini-orchestrator/skills/gemini-orchestrator/references/`
+# ✅ Execute directly
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/flash-$(date +%Y%m%d-%H%M).md
+```
+
+## Documentation Locations
+
+All template documentation is now in:
+
+1. **Complete Templates**: `skills/gemini-orchestrator/references/prompt-templates.md`
+2. **Workflow Examples**: `skills/gemini-orchestrator/examples/`
+   - `simple-delegation.md` - Single task workflow
+   - `complex-orchestration.md` - Multi-phase workflow
+3. **Main Skill**: `skills/gemini-orchestrator/SKILL.md`
+
+## Why This is Better
+
+✅ **No path discovery** - Templates always accessible in references/
+✅ **Progressive disclosure** - Templates loaded only when needed
+✅ **Always up-to-date** - Templates inline with skill
+✅ **No external dependencies** - Everything self-contained
+✅ **Easier to find** - Agent knows where to look
+
+---
+
+**See `../README.md` for v2.6.0 changelog and complete migration guide.**

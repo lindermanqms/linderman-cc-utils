@@ -38,28 +38,17 @@ SPEC=$(cat backlog/specs/SPEC-010-auth.backlog)
 # 5: Determine model
 MODEL="gemini-3-flash-preview"  # Implementation task
 
-# 6-7: Execute delegation
-cat CLAUDE.md | gemini -p "
-MEMORY CONTEXT:
-${MEMORY}
+# 6-7: Execute delegation (create prompt inline, execute directly)
+cat > .claude/gemini-orchestrator/prompts/task-10.txt <<'EOF'
+[See references/prompt-templates.md for complete template]
+EOF
 
-PROJECT CONTEXT (stdin):
-Standards from CLAUDE.md
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/flash-$(date +%Y%m%d-%H%M).md
 
-SPEC REQUIREMENTS:
-${SPEC}
-
-TECHNICAL REFERENCES:
-- https://jwt.io/introduction
-
-TASK: Implement JWT authentication with refresh tokens
-" --model ${MODEL}
-
-# 8: Extract and save report
-OUTPUT=$(gemini -p "..." --model ${MODEL})
-REPORT_FILE="report-$(date +%s).md"
-./plugins/gemini-orchestrator/scripts/extract-report.sh -o "$REPORT_FILE" <<< "$OUTPUT"
-cat "$REPORT_FILE"
+# 8: Review report
+cat .claude/gemini-orchestrator/reports/flash-*.md
 
 # 9: Save new patterns
 mcp__memory__create_entities({

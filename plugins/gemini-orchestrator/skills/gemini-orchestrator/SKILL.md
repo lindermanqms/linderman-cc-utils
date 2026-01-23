@@ -6,6 +6,21 @@ version: 2.6.0
 
 # Gemini Orchestrator Skill
 
+## ⚠️ CRITICAL: NO SCRIPTS, NO EXTERNAL TEMPLATES ⚠️
+
+**BREAKING CHANGE in v2.6.0:**
+- ❌ **NEVER use** `./plugins/gemini-orchestrator/scripts/delegate.sh` - **REMOVED**
+- ❌ **NEVER copy** `TEMPLATE-*.txt` files - **DO NOT EXIST**
+- ✅ **ALWAYS execute directly**: `gemini --approval-mode yolo -p "$(cat prompt.txt)"`
+- ✅ **ALWAYS create prompts inline**: Use heredoc, consult `references/prompt-templates.md`
+
+**If you see references to `delegate.sh` or `TEMPLATE-*.txt` anywhere:**
+- These are **DEPRECATED** (v2.5 and older)
+- **DO NOT** attempt to use them
+- Follow the **v2.6.0 workflow** below
+
+---
+
 ## Overview
 
 Enter **Orchestration Mode** to delegate tasks to Gemini AI models. This skill transforms Claude Code into a coordinator that leverages:
@@ -53,10 +68,10 @@ Enter **Orchestration Mode** to delegate tasks to Gemini AI models. This skill t
 - ✅ Análise de problemas → `gemini-3-pro-preview` (especifique "PROBLEM RESOLUTION")
 - ✅ Resolução de erros → `gemini-3-flash-preview`
 
-**VOCÊ FAZ APENAS:**
-- ✅ Validação final (build, test, end-to-end)
-- ✅ Gerenciamento de projeto (Backlog.md MCP)
-- ✅ Tomada de decisões finais
+**Orchestrator performs only:**
+- ✅ Final validation (build, test, end-to-end)
+- ✅ Project management (Backlog.md MCP)
+- ✅ Final decision making
 
 ---
 
@@ -125,10 +140,10 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 #### 3️⃣ Validar resultados
 
 ```bash
-# VOCÊ executa estes (NÃO o agent)
+# Orchestrator executes these (NOT the agent)
 npm run build
 npm test
-npm start  # Para validação end-to-end
+npm start  # For end-to-end validation
 ```
 
 ---
@@ -150,12 +165,6 @@ npm start  # Para validação end-to-end
 gemini -m gemini-3-flash-preview --approval-mode yolo \
   -p "$(cat .claude/gemini-orchestrator/prompts/task-ID.txt)"
 ```
-
-**Alternativa curta (-y é alias para --approval-mode yolo):**
-
-```bash
-gemini -m gemini-3-flash-preview -y \
-  -p "$(cat .claude/gemini-orchestrator/prompts/task-ID.txt)"
 ```
 
 ---
@@ -218,10 +227,10 @@ cat .claude/gemini-orchestrator/reports/flash-YYYYMMDD-HHMM.md
 **Step 5: Validar (como Orchestrator)**
 
 ```bash
-# VOCÊ executa estes (NÃO o agent)
+# Orchestrator executes these (NOT the agent)
 npm run build
 npm test
-npm start  # Para validação end-to-end
+npm start  # For end-to-end validation
 ```
 
 **Step 6: Atualizar Backlog (se usando spec-workflow)**
@@ -256,7 +265,7 @@ console.log("   - Status: Done")
 console.log("   - ACs: Todos marcados como [x]")
 ```
 
-**⚠️ REGRA OBRIGATÓRIA**: Agentes Gemini SEMPRE atualizam o backlog!
+**⚠️ MANDATORY RULE**: Gemini agents ALWAYS update the backlog!
 - ✅ Ao assumir: Status → "In Progress"
 - ✅ Ao concluir: Status → "Done" + ACs marcados
 - ✅ Sempre informar: "Backlog atualizado"
@@ -297,10 +306,10 @@ touch src/auth/jwt.ts
 ### Validação Final (Orchestrator APENAS)
 
 ```bash
-# VOCÊ executa validação final
-npm run build   # Build de produção
-npm test        # Testes completos
-npm start &     # Iniciar app para validação
+# Orchestrator executes final validation
+npm run build   # Production build
+npm test        # Complete test suite
+npm start &     # Start app for validation
 ```
 
 ---
@@ -354,19 +363,15 @@ Antes de usar esta skill, certifique-se:
    gemini --version
    ```
 
-2. **API key do Gemini configurada:**
-   ```bash
-   export GEMINI_API_KEY="your-key-here"
-   # Adicione ao ~/.bashrc ou ~/.zshrc para persistência
    ```
 
-3. **Diretório de orquestração inicializado:**
+2. **Diretório de orquestração inicializado:**
    ```bash
    mkdir -p .claude/gemini-orchestrator/prompts
    mkdir -p .claude/gemini-orchestrator/reports
    ```
 
-4. **Basic Memory MCP ativo** (opcional mas recomendado):
+3. **Basic Memory MCP ativo** (opcional mas recomendado):
    - Permite auto-fetch de padrões/decisões
    - Permite auto-save de insights
    - Verifique: `search_nodes({ query: "test" })`
@@ -410,4 +415,4 @@ Se usuário pedir implementação de código:
 
 ---
 
-**Remember:** You are the Orchestrator. **NUNCA "bote a mão na massa"**. **SEMPRE delegue TUDO** (planejamento, design, implementação). Execute via `gemini --approval-mode yolo -p arquivo.txt`, fornecer contexto rico, deixe agents desenvolverem durante implementação. Agents Gemini atualizam o Backlog.md automaticamente (status + ACs), VOCÊ valida e VOCÊ toma decisões finais.
+**Remember:** You are the Orchestrator. **NEVER implement directly**. **ALWAYS delegate EVERYTHING** (planning, design, implementation). Execute via `gemini --approval-mode yolo -p arquivo.txt`, provide rich context, let agents develop during implementation. Gemini agents update Backlog.md automatically (status + ACs), Orchestrator validates and makes final decisions.

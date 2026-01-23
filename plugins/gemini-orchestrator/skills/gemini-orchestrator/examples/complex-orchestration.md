@@ -7,46 +7,92 @@ This example demonstrates a multi-phase delegation workflow: gemini-3-pro for de
 ### PHASE 1: Design (gemini-3-pro)
 
 ```bash
-# 1. Create design prompt
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-pro-planning.txt \
-   .claude/gemini-orchestrator/prompts/task-15-api-design.txt
+# 1. Create design prompt directly (no template needed)
+cat > .claude/gemini-orchestrator/prompts/task-15-api-design.txt <<'EOF'
+# PLANNING TASK - API Layer Design
 
-# 2. Fill prompt with context
-# (Edit task-15-api-design.txt with requirements, constraints, etc.)
+IMPORTANT: This is a PLANNING task (NOT implementation).
 
-# 3. Execute design phase
-./plugins/gemini-orchestrator/scripts/delegate.sh -m pro \
-  .claude/gemini-orchestrator/prompts/task-15-api-design.txt
+You are Gemini-3-Pro, expert in system architecture and design.
 
-# 4. Review design report
-cat .claude/gemini-orchestrator/reports/pro-2026-01-11-14-00.md
+## PROJECT CONTEXT
+[Paste CLAUDE.md, architecture findings from Explore agent]
+
+## MEMORY CONTEXT
+[Paste results from search_nodes for patterns/decisions]
+
+## TASK DESCRIPTION
+Design complete API layer for the application
+
+### Requirements
+1. RESTful endpoints for all entities
+2. Authentication and authorization
+3. Rate limiting and caching
+
+### Acceptance Criteria
+- [ ] All endpoints documented
+- [ ] Auth flow designed
+- [ ] Rate limiting strategy defined
+
+[... rest from prompt-templates.md ...]
+EOF
+
+# 2. Execute design phase
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/pro-$TIMESTAMP.md"
+gemini -m gemini-3-pro-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-15-api-design.txt)" \
+  2>&1 | tee "$REPORT_FILE"
+
+# 3. Review design report
+cat .claude/gemini-orchestrator/reports/pro-$TIMESTAMP.md
 ```
 
 ### PHASE 2: Implementation (gemini-3-flash)
 
 ```bash
-# 5. Create implementation prompt
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
-   .claude/gemini-orchestrator/prompts/task-15-api-impl.txt
+# 4. Create implementation prompt with design from Phase 1
+cat > .claude/gemini-orchestrator/prompts/task-15-api-impl.txt <<'EOF'
+# IMPLEMENTATION TASK - API Layer Implementation
 
-# 6. Add design from Phase 1 to "DESIGN CONTEXT" section
-# (paste content from pro-*.md report into task-15-api-impl.txt)
+You are Gemini-3-Flash, expert TypeScript developer.
 
-# 7. Execute implementation
-./plugins/gemini-orchestrator/scripts/delegate.sh -m flash \
-  .claude/gemini-orchestrator/prompts/task-15-api-impl.txt
+## DESIGN CONTEXT (from Pro)
+[Paste content from pro-*.md report here]
+
+## PROJECT CONTEXT
+[Paste CLAUDE.md]
+
+## MEMORY CONTEXT
+[Paste patterns from search_nodes]
+
+## TASK DESCRIPTION
+Implement the API layer according to the design from Pro
+
+### Acceptance Criteria
+[Same ACs from design phase]
+
+[... rest from prompt-templates.md ...]
+EOF
+
+# 5. Execute implementation
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/flash-$TIMESTAMP.md"
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-15-api-impl.txt)" \
+  2>&1 | tee "$REPORT_FILE"
 ```
 
-### PHASE 3: Validation (YOU as Orchestrator)
+### PHASE 3: Validation (Orchestrator)
 
 ```bash
-# 8. Final validation (Orchestrator's responsibility)
+# 6. Final validation (Orchestrator's responsibility)
 npm run build
 npm test
 npm start &
 curl http://localhost:3000/api/health
 
-# 9. Save to memory
+# 7. Save to memory
 create_entities([{
   name: "linderman-cc-utils/task-15/decision-api-architecture",
   entityType: "decision",
@@ -58,9 +104,11 @@ create_entities([{
 
 - ✅ **Two-phase delegation** - Design (Pro) then Implementation (Flash)
 - ✅ **Design feeds implementation** - Pro's output becomes Flash's input
-- ✅ **Orchestrator validates** - Final build/test/server by YOU
+- ✅ **Orchestrator validates** - Final build/test/server by Orchestrator
 - ✅ **Memory persistence** - ADR saved for future reference
 - ✅ **Clear separation** - Planning vs Coding vs Validation
+- ✅ **No wrapper scripts** - Direct gemini-cli execution
+- ✅ **Prompts created inline** - No template file dependencies
 
 ## When to Use
 
@@ -76,8 +124,8 @@ Use this pattern when:
 ```
 ┌─────────────────────────────────────────────────────┐
 │                  ORCHESTRATOR                        │
-│   1. Create design prompt                           │
-│   2. Delegate to Pro                                │
+│   1. Create design prompt inline                    │
+│   2. Delegate to Pro via gemini-cli                 │
 └────────────────┬────────────────────────────────────┘
                  │
                  ▼
@@ -94,7 +142,7 @@ Use this pattern when:
 │                  ORCHESTRATOR                        │
 │   3. Review design                                  │
 │   4. Create implementation prompt (with design)     │
-│   5. Delegate to Flash                              │
+│   5. Delegate to Flash via gemini-cli               │
 └────────────────┬────────────────────────────────────┘
                  │
                  ▼
@@ -118,5 +166,6 @@ Use this pattern when:
 ## Related Examples
 
 - `simple-delegation.md` - Single-task delegation
-- `error-resolution.md` - Debugging workflow
-- `spec-workflow-integration.md` - Backlog.md integration
+- `../references/error-resolution.md` - Debugging workflow
+- `../references/spec-workflow-integration.md` - Backlog.md integration
+- `../references/prompt-templates.md` - Complete template examples

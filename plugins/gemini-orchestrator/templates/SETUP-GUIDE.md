@@ -1,320 +1,83 @@
-# .claude/gemini-orchestrator
+# ⚠️ DEPRECATED - Setup Guide Removed in v2.6.0
 
-Diretório de trabalho para delegações do Gemini Orchestrator.
+**This setup guide is deprecated and should not be used.**
 
-## Estrutura
+The workflow described here (copying templates, using delegate.sh script) **no longer works** in v2.6.0+.
 
+## Why Deprecated?
+
+**Problem:** Templates and scripts could not be found by agents.
+- Files lived in plugin cache: `~/.claude/plugins/cache/.../gemini-orchestrator/`
+- Agents executed from: `/path/to/user/project/`
+- No `$CLAUDE_PLUGIN_ROOT` variable available
+- Result: Path discovery impossible, agents wasted time searching
+
+## New Workflow (v2.6.0+)
+
+### 1. Consult Template References
+
+Read complete templates in:
 ```
-.claude/gemini-orchestrator/
-├── prompts/               # Arquivos de prompt (.txt)
-│   ├── TEMPLATE-pro-planning.txt
-│   ├── TEMPLATE-flash-implementation.txt
-│   ├── task-9.1-part2-update-hooks.txt
-│   └── ...
-└── reports/               # Relatórios gerados (.md, .log)
-    ├── flash-2026-01-11-15-30.md
-    ├── flash-2026-01-11-15-30-full.log
-    ├── pro-2026-01-11-14-20.md
-    └── ...
+plugins/gemini-orchestrator/skills/gemini-orchestrator/references/prompt-templates.md
 ```
 
-## Workflow
-
-### 1. Criar Prompt
-
-Copie um template e preencha com contexto:
+### 2. Create Prompt Inline
 
 ```bash
-# Para planejamento/design
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-pro-planning.txt \
-   .claude/gemini-orchestrator/prompts/task-10-design-api.txt
+# Create directory structure
+mkdir -p .claude/gemini-orchestrator/prompts
+mkdir -p .claude/gemini-orchestrator/reports
 
-# Para implementação
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
-   .claude/gemini-orchestrator/prompts/task-10-implement-api.txt
+# Create prompt file directly using heredoc
+cat > .claude/gemini-orchestrator/prompts/task-10.txt <<'EOF'
+# IMPLEMENTATION TASK - JWT Authentication
+
+You are Gemini-3-Flash, expert TypeScript developer.
+
+## PROJECT CONTEXT
+[Paste CLAUDE.md content]
+
+## MEMORY CONTEXT
+[Paste search_nodes results]
+
+[... complete template from references/prompt-templates.md ...]
+EOF
 ```
 
-### 2. Editar Prompt
-
-Preencha as seções:
-- **Project Context**: CLAUDE.md, arquitetura existente
-- **Memory Context**: Padrões, decisões, conhecimento do domínio
-- **Task Description**: Detalhes da tarefa
-- **Requirements**: Requisitos e Acceptance Criteria
-
-### 3. Executar Delegação
-
-Use o script helper:
+### 3. Execute Directly via gemini-cli
 
 ```bash
-# Auto-detecta modelo (Pro ou Flash)
-./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .claude/gemini-orchestrator/prompts/task-10-design-api.txt
-
-# Especificar modelo explicitamente
-./plugins/gemini-orchestrator/scripts/delegate.sh -m pro \
-  .claude/gemini-orchestrator/prompts/task-10-design-api.txt
-
-# Especificar arquivo de saída
-./plugins/gemini-orchestrator/scripts/delegate.sh \
-  -o .claude/gemini-orchestrator/reports/task-10-design.md \
-  .claude/gemini-orchestrator/prompts/task-10-design-api.txt
-
-# Salvar prompt na pasta de orquestração
-./plugins/gemini-orchestrator/scripts/delegate.sh -s \
-  /tmp/my-prompt.txt
+# No delegate.sh needed!
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10.txt)" \
+  2>&1 | tee .claude/gemini-orchestrator/reports/flash-$(date +%Y%m%d-%H%M).md
 ```
 
-### 4. Revisar Relatório
+## Documentation
 
-Os relatórios são salvos automaticamente em `reports/`:
+See current documentation:
 
+1. **Main README**: `../README.md` (v2.6.0 changelog)
+2. **Skill Documentation**: `../skills/gemini-orchestrator/SKILL.md`
+3. **Template References**: `../skills/gemini-orchestrator/references/prompt-templates.md`
+4. **Workflow Examples**: `../skills/gemini-orchestrator/examples/`
+
+## Migration
+
+**Old way (v2.5 - DEPRECATED):**
 ```bash
-# Ver relatório estruturado
-cat .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
-
-# Ver output completo (debugging)
-cat .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30-full.log
+cp templates/TEMPLATE-flash.txt prompts/task-10.txt
+./scripts/delegate.sh prompts/task-10.txt
 ```
 
-## Scripts Disponíveis
-
-### `delegate.sh`
-
-Script principal de delegação.
-
-**Uso**:
+**New way (v2.6):**
 ```bash
-./plugins/gemini-orchestrator/scripts/delegate.sh [OPTIONS] <prompt-file>
-```
-
-**Opções**:
-- `-m, --model <model>` - Modelo (pro|flash) [default: auto-detect]
-- `-o, --output <file>` - Arquivo de saída [default: auto-generated]
-- `-f, --format <fmt>` - Formato (plain|markdown|json) [default: markdown]
-- `-s, --save-prompt` - Salvar prompt em prompts/
-- `-h, --help` - Ajuda
-
-**Exemplos**:
-```bash
-# Delegação simples
-./plugins/gemini-orchestrator/scripts/delegate.sh prompts/implement-auth.txt
-
-# Escolher modelo
-./plugins/gemini-orchestrator/scripts/delegate.sh -m flash prompts/fix-bug.txt
-
-# Salvar em arquivo específico
-./plugins/gemini-orchestrator/scripts/delegate.sh \
-  -o reports/auth-implementation.md \
-  prompts/implement-auth.txt
-```
-
-### `extract-report.sh`
-
-Extrai relatório estruturado do output do gemini-cli.
-
-**Uso**:
-```bash
-gemini -p "..." | ./plugins/gemini-orchestrator/scripts/extract-report.sh
-```
-
-Chamado automaticamente pelo `delegate.sh`.
-
-## Auto-Detecção de Modelo
-
-O script `delegate.sh` detecta automaticamente o modelo baseado em keywords:
-
-**gemini-3-pro-preview** (Planning/Analysis):
-- Keywords: `PLANNING task`, `PROBLEM RESOLUTION`, `analyze`, `design`, `architecture`, `trade-off`
-
-**gemini-3-flash-preview** (Implementation):
-- Todos os outros casos
-
-Para forçar um modelo específico, use `-m pro` ou `-m flash`.
-
-## Estrutura de Relatórios
-
-### Pro (Planning/Analysis)
-
-```markdown
-=== ORCHESTRATOR REPORT ===
-
-## Analysis
-[Análise detalhada...]
-
-## Decisions
-[Decisões tomadas...]
-
-## Trade-offs
-[Análise de trade-offs...]
-
-## Alternatives Considered
-[Alternativas avaliadas...]
-
-## Risks & Mitigations
-[Riscos e mitigações...]
-
-## Recommendations
-[Recomendações...]
-
-## Next Steps
-[Próximos passos...]
-```
-
-### Flash (Implementation)
-
-```markdown
-=== ORCHESTRATOR REPORT ===
-
-## Implementation Summary
-[Resumo...]
-
-## Files Modified
-[Lista de arquivos...]
-
-## Changes Made
-[Descrição das mudanças...]
-
-## Static Analysis Results
-[Resultados de lint/typecheck...]
-
-## Testing Performed
-[Testes executados...]
-
-## Results
-[ACs atendidos, testes passando...]
-
-## Issues Found
-[Problemas encontrados...]
-```
-
-## Convenções de Nomenclatura
-
-### Arquivos de Prompt
-
-Formato: `{task-id}-{slug}.txt`
-
-Exemplos:
-- `task-9.1-update-hooks.txt`
-- `task-10-design-api.txt`
-- `task-10-implement-api.txt`
-
-### Arquivos de Relatório
-
-Gerados automaticamente: `{model}-{timestamp}.md`
-
-Exemplos:
-- `pro-2026-01-11-14-20.md`
-- `flash-2026-01-11-15-30.md`
-
-Ou custom via `-o`:
-- `task-10-design.md`
-- `task-10-implementation.md`
-
-## Integração com Workflow
-
-### Com Spec-Workflow
-
-```bash
-# 1. Ler spec e ACs
-backlog task view task-10
-
-# 2. Criar prompt baseado na spec
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
-   .claude/gemini-orchestrator/prompts/task-10-impl.txt
-
-# 3. Editar prompt (colar ACs da spec)
-vim .claude/gemini-orchestrator/prompts/task-10-impl.txt
-
-# 4. Executar delegação
-./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .claude/gemini-orchestrator/prompts/task-10-impl.txt
-
-# 5. Revisar relatório
-cat .claude/gemini-orchestrator/reports/flash-*.md
-
-# 6. Atualizar task com progresso
-backlog task update task-10 --notes "Implementação via Gemini Flash concluída"
-```
-
-### Com Basic Memory
-
-O Orchestrator (Sonnet) deve:
-
-1. **Antes da delegação**: Buscar contexto do memory
-   ```javascript
-   search_nodes({ query: "{slug} {domain} patterns" })
-   open_nodes({ names: ["{slug}/task-10"] })
-   ```
-
-2. **Preencher seção Memory Context** no prompt
-
-3. **Após delegação bem-sucedida**: Salvar insights
-   ```javascript
-   create_entities([{
-     name: "{slug}/task-10/pattern-jwt-auth",
-     entityType: "pattern",
-     observations: ["Padrão JWT implementado com refresh tokens"]
-   }])
-   ```
-
-## Troubleshooting
-
-### Erro: "command not found: gemini"
-
-**Solução**:
-```bash
-npm install -g gemini-cli
-```
-
-### Erro: "GEMINI_API_KEY not set"
-
-**Solução**:
-```bash
-export GEMINI_API_KEY="sua-chave-aqui"
-# Adicionar ao ~/.bashrc ou ~/.zshrc
-```
-
-### Erro: "No orchestrator report found"
-
-**Causa**: Agent não incluiu marcador `=== ORCHESTRATOR REPORT ===`
-
-**Solução**: Verificar se prompt inclui linha:
-```
-CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT...
-```
-
-### Erro de parsing no prompt
-
-**Causa**: Caracteres especiais ou múltiplas linhas quebrando Bash
-
-**Solução**: Use `delegate.sh` que lê de arquivo, evitando problemas de parsing.
-
-## Boas Práticas
-
-1. **Sempre use templates**: Garante formato consistente
-2. **Preencha todo o contexto**: Memory, CLAUDE.md, arquitetura
-3. **Use nomes descritivos**: `task-10-design-api.txt` melhor que `prompt1.txt`
-4. **Revise relatórios**: Sempre leia o report antes de validar
-5. **Salve prompts importantes**: Use `-s` para historiar delegações complexas
-6. **Versionamento**: Prompts e reports importantes podem ser commitados (opcional)
-
-## Arquivos Ignorados
-
-A pasta `.claude/gemini-orchestrator/` está em `.gitignore` por padrão.
-
-Para versionar prompts/reports importantes:
-```bash
-# Forçar commit de prompt específico
-git add -f .claude/gemini-orchestrator/prompts/critical-task.txt
-
-# Forçar commit de relatório
-git add -f .claude/gemini-orchestrator/reports/task-10-design.md
+cat > .claude/gemini-orchestrator/prompts/task-10.txt <<'EOF'
+[content from references/prompt-templates.md]
+EOF
+gemini -m gemini-3-flash-preview --approval-mode yolo -p "$(cat .claude/gemini-orchestrator/prompts/task-10.txt)"
 ```
 
 ---
 
-**Dúvidas?** Consulte:
-- `plugins/gemini-orchestrator/README.md`
-- `plugins/gemini-orchestrator/CHANGELOG.md`
-- `plugins/gemini-orchestrator/skills/gemini-orchestrator/SKILL.md`
+**This file is kept for reference only. Do not follow these instructions.**

@@ -9,49 +9,75 @@ This example demonstrates a single-task delegation to gemini-3-flash-preview for
 PROJECT_SLUG=$(basename $(git rev-parse --show-toplevel))
 # Output: linderman-cc-utils
 
-# 2. Fetch from memory (YOU do this)
+# 2. Fetch from memory (Orchestrator does this)
 search_nodes({ query: "linderman-cc-utils auth patterns" })
 # Results: pattern-jwt-storage, pattern-chrome-extension-auth
 
-# 3. Create prompt from template
-cp .claude/gemini-orchestrator/prompts/TEMPLATE-flash-implementation.txt \
-   .claude/gemini-orchestrator/prompts/task-10-jwt-auth.txt
+# 3. Create prompt file directly (no template copying needed)
+cat > .claude/gemini-orchestrator/prompts/task-10-jwt-auth.txt <<'EOF'
+# Task: JWT Authentication Implementation
 
-# 4. Edit prompt - fill in:
-#    - Memory Context (paste patterns from step 2)
-#    - Project Context (CLAUDE.md relevant sections)
-#    - Acceptance Criteria (from Backlog.md if using spec-workflow)
-#    - Task description
+## 📝 Project Context
+[Paste CLAUDE.md relevant sections]
 
-# 5. Execute delegation via script
-./plugins/gemini-orchestrator/scripts/delegate.sh \
-  .claude/gemini-orchestrator/prompts/task-10-jwt-auth.txt
+## 🧠 Memory Context
+**Patterns from Basic Memory:**
+- pattern-jwt-storage: Use chrome.storage.local for tokens
+- pattern-chrome-extension-auth: Session management in extensions
+
+## 🎯 Task Description
+Implement JWT authentication for Chrome extension
+
+### Acceptance Criteria
+- [ ] Generate JWT tokens on login
+- [ ] Store tokens securely in chrome.storage.local
+- [ ] Validate tokens on protected routes
+- [ ] Handle token refresh
+
+### Technical Requirements
+1. Use jsonwebtoken library
+2. Token expiry: 15 minutes
+3. Refresh token: 7 days
+
+## FILES TO MODIFY/CREATE
+- [ ] `src/auth/jwt.service.ts` - JWT service
+- [ ] `src/auth/storage.ts` - Secure storage
+- [ ] `tests/auth/jwt.test.ts` - Unit tests
+
+[... rest of mandatory requirements from prompt-templates.md ...]
+EOF
+
+# 4. Execute delegation via gemini-cli directly
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M)
+REPORT_FILE=".claude/gemini-orchestrator/reports/flash-$TIMESTAMP.md"
+gemini -m gemini-3-flash-preview --approval-mode yolo \
+  -p "$(cat .claude/gemini-orchestrator/prompts/task-10-jwt-auth.txt)" \
+  2>&1 | tee "$REPORT_FILE"
 
 # Script outputs:
-# ℹ Auto-detected model: gemini-3-flash-preview
 # ✓ Delegation completed successfully
-# ✓ Report extracted to: .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
+# ✓ Report saved to: .claude/gemini-orchestrator/reports/flash-2026-01-17-15-30.md
 
-# 6. Review report
-cat .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md
+# 5. Review report
+cat .claude/gemini-orchestrator/reports/flash-2026-01-17-15-30.md
 
-# 7. Validate (YOU do this, not agent)
+# 6. Validate (Orchestrator does this, not agent)
 npm run build
 npm test
 
-# 8. Update Backlog (YOU do this, not agent)
+# 7. Update Backlog (Orchestrator does this, not agent)
 await backlog_task_update({
   id: "task-10",
-  notes: "JWT auth implemented. Report: .claude/gemini-orchestrator/reports/flash-2026-01-11-15-30.md"
+  notes: "JWT auth implemented. Report: .claude/gemini-orchestrator/reports/flash-2026-01-17-15-30.md"
 })
 ```
 
 ## Key Points
 
 - ✅ **Memory fetched first** - Context from previous work
-- ✅ **Template used** - Standardized prompt structure
-- ✅ **delegate.sh handles execution** - No manual gemini-cli commands
-- ✅ **Orchestrator validates** - Final build/test by YOU, not agent
+- ✅ **Prompt created inline** - No template copying needed
+- ✅ **Direct gemini-cli execution** - No wrapper scripts
+- ✅ **Orchestrator validates** - Final build/test by Orchestrator, not agent
 - ✅ **Backlog updated by Orchestrator** - Agent doesn't touch MCP
 
 ## When to Use
@@ -65,5 +91,6 @@ Use this pattern when:
 ## Related Examples
 
 - `complex-orchestration.md` - Multi-phase workflows (Pro → Flash)
-- `spec-workflow-integration.md` - Integration with Backlog.md
-- `error-resolution.md` - Debugging and error handling
+- `../references/spec-workflow-integration.md` - Integration with Backlog.md
+- `../references/error-resolution.md` - Debugging and error handling
+- `../references/prompt-templates.md` - Complete template examples
