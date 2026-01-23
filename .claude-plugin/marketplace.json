@@ -18,7 +18,7 @@
     {
       "name": "spec-workflow",
       "source": "./plugins/spec-workflow",
-      "description": "Workflow Spec-Driven Development com integração Backlog.md e Cipher Memory"
+      "description": "Workflow Spec-Driven Development com integração Backlog.md e Basic Memory"
     },
     {
       "name": "gemini-coordination",
