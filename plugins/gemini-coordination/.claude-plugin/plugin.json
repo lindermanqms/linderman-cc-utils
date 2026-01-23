@@ -1,0 +1,9 @@
+{
+  "name": "gemini-coordination",
+  "description": "Coordena delegações aos modelos Gemini (Pro e Flash) para orquestração multi-modelo",
+  "version": "1.0.0",
+  "author": {
+    "name": "linderman-cc-utils"
+  },
+  "skills": "./skills/"
+}
