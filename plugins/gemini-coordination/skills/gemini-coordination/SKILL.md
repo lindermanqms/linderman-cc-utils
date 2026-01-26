@@ -1,7 +1,7 @@
 ---
 name: gemini-coordination
 description: This skill should be used when the user asks to "delegate to gemini", "use gemini for", "let gemini handle", "coordinate with gemini", "orchestrate with gemini", mentions "gemini-cli", or needs to leverage Gemini models for complex reasoning, planning, or implementation tasks requiring coordination between multiple AI models. Execute directly via gemini CLI with --approval-mode yolo for headless automation.
-version: 1.0.0
+version: 2.0.0
 ---
 
 # Gemini Coordination Skill
@@ -123,6 +123,81 @@ npm test
 npm start &  # For end-to-end validation
 ```
 
+## Persona-Based Delegation
+
+The plugin includes 8 specialized personas for different task types. Using personas provides role-specific expertise, tailored context collection instructions, and domain-specific research guidelines.
+
+### Available Personas
+
+**Implementation Personas (Flash):**
+- **frontend-dev** - React/Vue/Angular UI development, forms, validation, responsive design
+- **backend-dev** - Node.js/Python/Rust API development, REST/GraphQL, authentication
+- **test-engineer** - Unit/integration/E2E tests, mocking, coverage
+- **database-specialist** - Database migrations, query optimization, schema changes
+- **security-expert** - Secure implementation practices, vulnerability fixes
+- **performance-engineer** - Performance optimization, profiling, caching
+- **devops-engineer** - CI/CD pipelines, Docker/Kubernetes, infrastructure
+
+**Planning Personas (Pro):**
+- **architect** - System design, microservices vs monolith, technology choices
+- **security-expert** - Security review, threat modeling, OWASP Top 10 analysis
+- **database-specialist** - Database architecture design, data modeling, scalability
+- **performance-engineer** - Performance analysis, bottleneck identification, optimization strategy
+- **devops-engineer** - Infrastructure design, CI/CD architecture, deployment strategies
+
+### Using Personas
+
+1. **Select persona** based on task type and domain (see quick reference below)
+2. **Copy Prompt Injection Template** from `references/persona-library.md`
+3. **Include Context Collection Protocol** - Each persona has specific research instructions
+4. **Execute delegation** as usual with Flash or Pro model
+
+### Quick Persona Selection
+
+| Task Type | Persona | Model |
+|-----------|---------|-------|
+| React/Vue/Angular components | frontend-dev | Flash |
+| Node.js/Python/Rust APIs | backend-dev | Flash |
+| System architecture design | architect | Pro |
+| Security review/vulnerabilities | security-expert | Pro (analysis), Flash (fixes) |
+| Database schema/optimization | database-specialist | Pro (design), Flash (migrations) |
+| Test implementation | test-engineer | Flash |
+| CI/CD/infrastructure | devops-engineer | Pro (design), Flash (implementation) |
+| Performance optimization | performance-engineer | Pro (analysis), Flash (fixes) |
+
+### Persona Library
+
+Complete persona definitions with:
+- **Identity** - Role, model preference, expertise level
+- **Capabilities** - Specific skills and technologies
+- **Context Requirements** - Files to read and research strategy
+- **Prompt Injection Template** - Ready-to-use prompt structure
+
+See `references/persona-library.md` for all 8 personas with complete templates.
+
+### Context Collection Protocol
+
+Every persona includes a **Context Collection Protocol** with 3 phases:
+
+**Phase 1: Read Project Context (MANDATORY)**
+- Always read CLAUDE.md, package.json, existing implementation
+- Persona-specific files (e.g., Dockerfile for devops, schema.prisma for database)
+
+**Phase 2: Research (IF specified)**
+- Web search for latest best practices
+- Official documentation for libraries/frameworks
+- Domain-specific patterns and anti-patterns
+- **IMPORTANT: When Phase 2 is included, web search is MANDATORY**
+
+**Phase 3: Understand Constraints**
+- Project coding standards
+- Existing patterns to follow
+- Files allowed/forbidden to modify
+- Dependencies available
+- Security/performance considerations
+
+**Agents must NOT proceed until all phases complete.**
+
 ## Prompt Templates Reference
 
 Complete prompt templates are available in `references/prompt-templates.md`:
@@ -158,8 +233,9 @@ Complete prompt templates are available in `references/prompt-templates.md`:
 ## Additional Resources
 
 ### Reference Documentation
-- **`references/prompt-templates.md`** - Complete Flash and Pro templates
-- **`references/delegation-guide.md`** - When and how to delegate
+- **`references/persona-library.md`** - Complete persona definitions with context protocols
+- **`references/prompt-templates.md`** - Complete Flash and Pro templates with persona integration
+- **`references/delegation-guide.md`** - When and how to delegate, persona selection guide
 - **`references/validation-protocol.md`** - Validation procedures
 - **`references/troubleshooting.md`** - Common issues and solutions
 

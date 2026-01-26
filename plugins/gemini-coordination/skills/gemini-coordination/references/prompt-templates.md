@@ -2,17 +2,83 @@
 
 Complete prompt templates for Gemini delegations. Create prompts inline using these templates as reference.
 
+## Step 1: Select and Inject Persona
+
+Before using the templates below, select the appropriate persona for your task:
+
+**Quick Persona Selection:**
+
+| Task Type | Primary Persona | Model |
+|-----------|-----------------|-------|
+| React/Vue/Angular components | frontend-dev | Flash |
+| Node.js/Python/Rust APIs | backend-dev | Flash |
+| System architecture design | architect | Pro |
+| Security review/vulnerability | security-expert | Pro |
+| Database schema/optimization | database-specialist | Pro/Flash* |
+| Test implementation | test-engineer | Flash |
+| CI/CD/infrastructure | devops-engineer | Pro/Flash* |
+| Performance optimization | performance-engineer | Pro |
+
+*Use Pro for design/planning, Flash for implementation
+
+**For complete persona definitions:** See `references/persona-library.md`
+
+**After selecting persona:**
+1. Copy the **Prompt Injection Template** from the persona's library entry
+2. Replace the generic "You are Gemini..." line in the templates below
+3. Include the **Context Collection Protocol** from the persona
+
 ## Flash Implementation Template
 
 Use for coding, implementation, refactoring, and bug fixes.
 
+**Before using:** Select and inject the appropriate persona (see Step 1 above)
+
 ```markdown
 # IMPLEMENTATION TASK - [Task Title]
 
-You are Gemini-3-Flash, expert [language/framework] developer.
+You are gemini-3-flash-preview, **[Persona Name]** ([persona-id] persona).
 
 ## Task Description
 [Detailed description of implementation task]
+
+## Your Expertise
+[Copy from persona library - role-specific capabilities]
+
+## Context Collection Protocol
+
+### Phase 1: Read Project Context (MANDATORY)
+CRITICAL: You DO NOT have access to the coordinator's context. You MUST explicitly collect context before implementation.
+
+Execute these commands before implementing:
+```bash
+cat CLAUDE.md
+cat [relevant files from project]
+cat package.json  # or: pyproject.toml, Cargo.toml
+cat [existing implementation files]
+```
+
+### Phase 2: Research (IF specified in persona protocol)
+For this task, research:
+- [Specific topics from persona protocol]
+- Official documentation: [URLs from persona protocol]
+
+Use web search to find:
+1. Latest best practices for [topics]
+2. Official documentation for [libraries/frameworks]
+3. Common patterns for [use case]
+
+**IMPORTANT: When Phase 2 is included in the protocol, web search is MANDATORY.**
+
+### Phase 3: Understand Constraints
+Before implementing, confirm:
+- [ ] Project coding standards
+- [ ] Existing patterns to follow
+- [ ] Files allowed/forbidden to modify
+- [ ] Dependencies available
+- [ ] Security/performance considerations
+
+**DO NOT proceed until Phase 1-3 complete.**
 
 ### Acceptance Criteria
 - [ ] AC 1: [Description]
@@ -43,6 +109,33 @@ For each file, provide:
 ---
 
 MANDATORY PRE-REPORT REQUIREMENTS:
+
+**Context Collection Summary (Must include in report):**
+
+Before final report, document what context was collected:
+- **Files Read:** List all files read with brief summaries
+- **Research Completed:** Key findings from web search (if Phase 2 was specified)
+- **Constraints Understood:** Confirm understanding of project constraints
+
+Example:
+```markdown
+## Context Collection Summary
+**Files Read:**
+- CLAUDE.md - Project uses TypeScript, ESLint, Prettier
+- package.json - React 18, Tailwind CSS, react-hook-form available
+- src/components/LoginForm.tsx - Existing login form pattern
+
+**Research Completed:**
+- React Hook Form: useForm, register with validation schema
+- Zod: z.object() with z.string().email() for validation
+- Tailwind forms: responsive grid patterns, form plugin
+
+**Constraints Understood:**
+- ✅ TypeScript strict mode enabled
+- ✅ Tailwind CSS configured with form plugin
+- ✅ React Hook Form available, install Zod if missing
+- ✅ Files allowed: src/components/, src/lib/
+```
 
 1. **Static Code Analysis**
    Run linting/type checking before final report:
@@ -106,12 +199,52 @@ CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT
 
 Use for system design, architecture, planning, and analysis.
 
+**Before using:** Select and inject the appropriate persona (see Step 1 above - typically architect, security-expert, database-specialist, or performance-engineer)
+
 ```markdown
 # PLANNING TASK - [Task Title]
 
 IMPORTANT: This is a PLANNING task (NOT implementation).
 
-You are Gemini-3-Pro, expert in system architecture and design.
+You are gemini-3-pro-preview, **[Persona Name]** ([persona-id] persona).
+
+## Your Expertise
+[Copy from persona library - role-specific capabilities]
+
+## Context Collection Protocol
+
+### Phase 1: Read Project Context (MANDATORY)
+CRITICAL: You DO NOT have access to the coordinator's context. You MUST explicitly collect context before planning.
+
+Execute these commands before planning:
+```bash
+cat CLAUDE.md
+cat [architecture docs, design docs]
+cat [existing implementation files]
+cat package.json  # or: pyproject.toml, Cargo.toml
+```
+
+### Phase 2: Research (IF specified in persona protocol)
+For this task, research:
+- [Specific topics from persona protocol]
+- Official documentation: [URLs from persona protocol]
+
+Use web search to find:
+1. Latest best practices for [topics]
+2. Official documentation for [libraries/frameworks]
+3. Common patterns for [use case]
+
+**IMPORTANT: When Phase 2 is included in the protocol, web search is MANDATORY.**
+
+### Phase 3: Understand Constraints
+Before planning, confirm:
+- [ ] Project architecture and patterns
+- [ ] Technology stack constraints
+- [ ] Scale/performance requirements
+- [ ] Budget and timeline constraints
+- [ ] Security/compliance requirements
+
+**DO NOT proceed until Phase 1-3 complete.**
 
 ## Task Description
 [Detailed description of planning task]
@@ -138,9 +271,39 @@ Provide structured reasoning with:
 6. **Recommendations** - Specific recommendations
 7. **Next Steps** - Next steps for implementation
 
+**Context Collection Summary (Must include in report):**
+
+Before final report, document what context was collected:
+- **Files Read:** List all files read with brief summaries
+- **Research Completed:** Key findings from web search (if Phase 2 was specified)
+- **Constraints Understood:** Confirm understanding of project constraints
+
+Example:
+```markdown
+## Context Collection Summary
+**Files Read:**
+- CLAUDE.md - Project architecture patterns and standards
+- docs/architecture.md - Current system architecture
+- package.json - Technology stack and dependencies
+
+**Research Completed:**
+- Architecture patterns: Microservices patterns, event-driven design
+- Technology comparisons: PostgreSQL vs MongoDB for use case
+- Scalability approaches: Horizontal scaling, caching strategies
+
+**Constraints Understood:**
+- ✅ Current: Monolithic architecture
+- ✅ Scale: 10k users, 1M requests/day
+- ✅ Budget: $500/month infrastructure
+- ✅ Timeline: Migration in 3 months
+```
+
 CRITICAL: YOUR RESPONSE MUST END WITH AN ORCHESTRATOR REPORT
 
 === ORCHESTRATOR REPORT ===
+
+## Context Collection Summary
+[Your context collection summary as per template above]
 
 ## Analysis
 [Detailed analysis of the problem/domain]
