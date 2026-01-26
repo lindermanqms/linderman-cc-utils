@@ -16,19 +16,9 @@
       "description": "General purpose tools for web reverse engineering and HAR analysis"
     },
     {
-      "name": "spec-workflow",
-      "source": "./plugins/spec-workflow",
-      "description": "Workflow Spec-Driven Development com integração Backlog.md e Basic Memory"
-    },
-    {
       "name": "gemini-coordination",
       "source": "./plugins/gemini-coordination",
       "description": "Orquestração multi-modelo Gemini (Flash como padrão para implementação, Pro para planejamento complexo) com execução direta via gemini-cli e zero dependências externas"
-    },
-    {
-      "name": "gemini-orchestrator",
-      "source": "./plugins/gemini-orchestrator",
-      "description": "[DEPRECATED v2.6.0] Sistema de orquestração para delegar tarefas complexas aos modelos Gemini (use gemini-coordination)"
     },
     {
       "name": "git-worktrees",
