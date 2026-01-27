@@ -4,33 +4,25 @@ Este repositório serve como um **Marketplace de Plugins para Claude Code**, hos
 
 ## 📦 Plugins Disponíveis
 
-### `spec-workflow` (v2.0)
-Plugin de **Spec-Driven Development** com integração completa ao Backlog.md MCP e Basic Memory.
-
-**Commands incluídos:**
-- `/spec-init` - Inicializar ambiente com validação de CLI
-- `/spec-plan` - Criar task + spec com todos os campos MCP
-- `/spec-execute` - Executar task com gerenciamento de dependências
-- `/spec-review` - Revisar com validação automática de ACs
-- `/spec-retro` - Finalizar com checklist e Basic Memory
-- `/spec-replan` - Reestruturar backlog com análise de impacto
-- `/spec-align` - CRUD de documentos de padrões
-- `/spec-memorize` - Salvar aprendizados no Basic Memory
-- `/spec-board` - Kanban interativo com estatísticas
-- `/spec-search` - Busca fuzzy em tasks/specs/docs
-- `/spec-help` - Documentação completa
-
-### `gemini-orchestrator` (v2.3)
-Sistema de orquestração para delegar tarefas complexas aos modelos Gemini (Pro para planejamento, Flash para implementação).
+### `gemini-coordination` (v2.0) ⭐ NOVO
+Sistema de orquestração para delegar tarefas aos modelos Gemini (Flash como padrão para implementação, Pro para planejamento complexo) com 8 personas especializadas e protocolo explícito de coleta de contexto.
 
 **Skill incluída:**
-- **`gemini-orchestrator`**: Orquestração automática com coleta de contexto, integração com Basic Memory e separação clara de responsabilidades (Orchestrator vs Agents).
+- **`gemini-coordination`**: Orquestração multi-modelo com personas especializadas, execução direta via gemini-cli e zero dependências externas.
 
 **Recursos:**
-- Delegação inteligente para gemini-3-pro-preview (planejamento) e gemini-3-flash-preview (implementação)
-- Coleta automática de contexto do projeto
-- Integração com Basic Memory para salvar padrões, ADRs e resoluções de erros
-- Matriz de responsabilidades clara (Orchestrator valida, Agents implementam)
+- **8 Personas Especializadas:** frontend-dev, backend-dev, architect, security-expert, database-specialist, test-engineer, devops-engineer, performance-engineer
+- **Protocolo de Coleta de Contexto:** 3 fases obrigatórias (leitura, pesquisa, verificação de restrições)
+- **Execução Direta:** Via `gemini --approval-mode yolo` sem scripts externos
+- **Templates Inline:** Progressive disclosure via `references/prompt-templates.md`
+- **Context Verification:** Relatórios incluem "Context Collection Summary"
+
+**Quando usar:**
+- Implementar features complexas com agentes Gemini
+- Delegar tarefas especializadas (frontend, backend, segurança, etc.)
+- Análise de arquitetura e design de sistemas
+- Revisão de segurança e performance
+- Orquestração multi-fase (Pro planejamento → Flash implementação)
 
 ### `pje-extensions` (v0.1)
 Ferramentas e skills para desenvolvimento de extensões Chrome e automação do PJe (Processo Judicial Eletrônico - TRF5).
@@ -89,11 +81,8 @@ Após instalar o marketplace, você pode instalar os plugins individuais.
 ### Instalar Plugins
 
 ```bash
-# Spec-Driven Development
-/plugin add spec-workflow
-
-# Gemini Orchestrator
-/plugin add gemini-orchestrator
+# Gemini Coordination (recomendado)
+/plugin add gemini-coordination
 
 # PJe Extensions
 /plugin add pje-extensions
@@ -107,19 +96,24 @@ Após instalar o marketplace, você pode instalar os plugins individuais.
 
 ### Exemplos de Uso
 
-**Spec-Workflow:**
-- `/spec-plan "Implementar autenticação JWT"`
-- `/spec-execute task-10`
-- `/spec-board --milestone "v1.0"`
-
-**Gemini Orchestrator:**
-- "Delegate to gemini: implementar API REST"
-- "Use gemini for: refatorar código do módulo X"
+**Gemini Coordination:**
+- "Delegate to gemini: implementar API REST com frontend-dev persona"
+- "Use gemini for: análise de segurança com security-expert"
+- "Let gemini handle: design de arquitetura com architect persona"
 
 **PJe Extensions:**
 - "Como funciona a autenticação do PJe?"
 - "Quais os endpoints para listar tarefas?"
 - "Como baixar o PDF de um processo via script?"
+
+**Reverse Engineering Utils:**
+- "Analisar tráfego de rede da aplicação X"
+- "Deofuscar JavaScript do site Y"
+- "Automatizar coleta de HAR com Playwright"
+
+**Git Worktrees:**
+- "Criar worktree para feature branch X"
+- "Gerenciar symlinks de dependências"
 
 ## 📚 Estrutura do Repositório
 
@@ -128,38 +122,64 @@ linderman-cc-utils/
 ├── .claude-plugin/
 │   └── marketplace.json          # Manifesto do Marketplace
 ├── plugins/
-│   ├── spec-workflow/
-│   │   ├── commands/             # 11 commands /spec-*
+│   ├── gemini-coordination/      # v2.0 - Orquestração Gemini
 │   │   └── skills/
-│   │       └── spec-workflow/
-│   │           ├── SKILL.md
-│   │           └── references/
-│   ├── gemini-orchestrator/
-│   │   ├── scripts/              # delegate.sh, extract-report.sh
-│   │   ├── templates/            # Prompts versionados
-│   │   └── skills/
-│   │       └── gemini-orchestrator/
-│   │           ├── SKILL.md
-│   │           └── references/   # 12 referências técnicas
-│   ├── pje-extensions/
+│   │       └── gemini-coordination/
+│   │       ├── SKILL.md
+│   │       ├── examples/         # Exemplos práticos com personas
+│   │       └── references/       # Persona library, templates, guias
+│   ├── pje-extensions/           # v0.1 - Extensões Chrome PJe
 │   │   └── skills/
 │   │       └── pje-reverse-engineering/
-│   ├── reverse-engineering-utils/
+│   ├── reverse-engineering-utils/ # v0.1 - Engenharia reversa
 │   │   └── skills/
 │   │       └── web-traffic-analysis/
-│   └── git-worktrees/
+│   └── git-worktrees/            # v1.0 - Gerenciamento de worktrees
 │       └── skills/
 │           └── git-worktrees/
 └── README.md
 ```
 
+## 🎯 Destaques
+
+### gemini-coordination v2.0
+
+**Principais funcionalidades:**
+- ✅ **8 personas especializadas** por domínio de expertise
+- ✅ **Protocolo de coleta de contexto** (3 fases obrigatórias)
+- ✅ **Zero dependências externas** (sem scripts, sem templates)
+- ✅ **Execução direta** via `gemini-cli --approval-mode yolo`
+- ✅ **Progressive disclosure** (templates em references/)
+- ✅ **Context verification** nos relatórios
+
+**Diferencial em relação a outras soluções:**
+- Mais simples e direto que gemini-orchestrator (removido)
+- Sem scripts externos problemáticos
+- Sem templates em arquivos separados
+- Coleta de contexto explícita e obrigatória
+- Personas especializadas por domínio
+
 ## 🤝 Contribuição
 
 Contribuições são bem-vindas! Sinta-se à vontade para abrir PRs com:
-- Novos comandos para o spec-workflow
-- Templates de prompts para o gemini-orchestrator
+- Novas personas para o gemini-coordination
 - Novas referências técnicas para PJe ou engenharia reversa
 - Melhorias na documentação
+- Correção de bugs
+
+## 📝 Changelog
+
+### v2.0 (2026-01-27)
+- **ADICIONADO:** gemini-coordination v2.0 com 8 personas e protocolo de contexto
+- **REMOVIDO:** spec-workflow (não estava sendo utilizado)
+- **REMOVIDO:** gemini-orchestrator (substituído por gemini-coordination)
+- **ATUALIZADO:** Marketplace limpo com 4 plugins ativos
+
+### v1.0 (2026-01-23)
+- Lançamento inicial do marketplace
+- Plugins: pje-extensions, reverse-engineering-utils, git-worktrees
+- gemini-orchestrator v1.0
 
 ---
+
 Desenvolvido por [Linderman](https://github.com/lindermanqms)
